@@ -9,7 +9,9 @@ import {
   HttpStatus,
   ParseIntPipe,
   HttpCode,
+  Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import {
   ApiTags,
   ApiOperation,
@@ -72,15 +74,28 @@ export class ProgramaEstudioController {
   @ApiOperation({
     summary: 'Obtener todos los programas de estudio',
     description:
-      'Retorna una lista de todos los programas de estudio ordenados por fecha de creación (más recientes primero)',
+      'Retorna una lista de todos los programas de estudio ordenados por fecha de creación (más recientes primero). Si no hay programas, retorna 204 No Content.',
   })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Lista de programas de estudio obtenida exitosamente',
     type: [ProgramaEstudioResponseDto],
   })
-  async findAll(): Promise<ProgramaEstudio[]> {
-    return await this.programaEstudioService.findAll();
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'No hay programas de estudio registrados',
+  })
+  async findAll(
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<ProgramaEstudio[] | void> {
+    const programas = await this.programaEstudioService.findAll();
+
+    if (programas.length === 0) {
+      res.status(HttpStatus.NO_CONTENT);
+      return;
+    }
+
+    return programas;
   }
 
   /**
