@@ -5,19 +5,21 @@ import {
   ConflictException,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { Repository } from 'typeorm';
 import { ProgramaEstudio } from '../entities/programa-estudio.entity';
 import { CreateProgramaEstudioDto, UpdateProgramaEstudioDto } from '../DTOs';
+import type { IProgramaEstudioRepository } from '../repository/programa-estudio.repository.interface';
 
 /**
- * Servicio que maneja la lógica de negocio de Programa de Estudio
- * Implementa operaciones CRUD completas
+ * Servicio de lógica de negocio para Programa de Estudio
+ * Depende SOLO de la interfaz IProgramaEstudioRepository
+ * No conoce la implementación concreta (ProgramaEstudioRepository)
+ * Esto permite total desacoplamiento y facilita testing
  */
 @Injectable()
 export class ProgramaEstudioService {
   constructor(
-    @Inject('PROGRAMA_ESTUDIO_REPOSITORY')
-    private programaEstudioRepository: Repository<ProgramaEstudio>,
+    @Inject('IProgramaEstudioRepository')
+    private readonly programaEstudioRepository: IProgramaEstudioRepository,
   ) {}
 
   /**
@@ -28,22 +30,18 @@ export class ProgramaEstudioService {
    */
   async create(createDto: CreateProgramaEstudioDto): Promise<ProgramaEstudio> {
     try {
-      // Verificar si ya existe un programa con el mismo nombre
-      const existente = await this.programaEstudioRepository.findOne({
-        where: { nombre: createDto.nombre },
-      });
+      // Validar unicidad del nombre
+      const existe = await this.programaEstudioRepository.existsByNombre(
+        createDto.nombre,
+      );
 
-      if (existente) {
+      if (existe) {
         throw new ConflictException(
           `Ya existe un programa de estudio con el nombre "${createDto.nombre}"`,
         );
       }
 
-      // Crear nueva instancia
-      const programaEstudio = this.programaEstudioRepository.create(createDto);
-
-      // Guardar en la base de datos
-      return await this.programaEstudioRepository.save(programaEstudio);
+      return await this.programaEstudioRepository.create(createDto);
     } catch (error) {
       if (error instanceof ConflictException) {
         throw error;
@@ -59,15 +57,7 @@ export class ProgramaEstudioService {
    * @returns Lista de programas de estudio
    */
   async findAll(): Promise<ProgramaEstudio[]> {
-    try {
-      return await this.programaEstudioRepository.find({
-        order: { createdAt: 'DESC' },
-      });
-    } catch {
-      throw new InternalServerErrorException(
-        'Error al obtener los programas de estudio',
-      );
-    }
+    return await this.programaEstudioRepository.findAll();
   }
 
   /**
@@ -76,27 +66,16 @@ export class ProgramaEstudioService {
    * @returns Programa de estudio encontrado
    * @throws NotFoundException si no se encuentra el programa
    */
-  async findOne(id: number): Promise<ProgramaEstudio> {
-    try {
-      const programaEstudio = await this.programaEstudioRepository.findOne({
-        where: { id },
-      });
+  async findOne(id: string): Promise<ProgramaEstudio> {
+    const programa = await this.programaEstudioRepository.findById(id);
 
-      if (!programaEstudio) {
-        throw new NotFoundException(
-          `Programa de estudio con ID ${id} no encontrado`,
-        );
-      }
-
-      return programaEstudio;
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
-      throw new InternalServerErrorException(
-        'Error al obtener el programa de estudio',
+    if (!programa) {
+      throw new NotFoundException(
+        `Programa de estudio con ID ${id} no encontrado`,
       );
     }
+
+    return programa;
   }
 
   /**
@@ -108,42 +87,26 @@ export class ProgramaEstudioService {
    * @throws ConflictException si el nuevo nombre ya existe
    */
   async update(
-    id: number,
+    id: string,
     updateDto: UpdateProgramaEstudioDto,
   ): Promise<ProgramaEstudio> {
-    try {
-      // Verificar que el programa existe
-      const programaEstudio = await this.findOne(id);
+    // Verificar que el programa existe
+    const programa = await this.findOne(id);
 
-      // Si se intenta cambiar el nombre, verificar que no exista otro con ese nombre
-      if (updateDto.nombre && updateDto.nombre !== programaEstudio.nombre) {
-        const existente = await this.programaEstudioRepository.findOne({
-          where: { nombre: updateDto.nombre },
-        });
-
-        if (existente) {
-          throw new ConflictException(
-            `Ya existe un programa de estudio con el nombre "${updateDto.nombre}"`,
-          );
-        }
-      }
-
-      // Actualizar campos
-      Object.assign(programaEstudio, updateDto);
-
-      // Guardar cambios
-      return await this.programaEstudioRepository.save(programaEstudio);
-    } catch (error) {
-      if (
-        error instanceof NotFoundException ||
-        error instanceof ConflictException
-      ) {
-        throw error;
-      }
-      throw new InternalServerErrorException(
-        'Error al actualizar el programa de estudio',
+    // Si se está actualizando el nombre, verificar unicidad
+    if (updateDto.nombre && updateDto.nombre !== programa.nombre) {
+      const existe = await this.programaEstudioRepository.existsByNombre(
+        updateDto.nombre,
       );
+
+      if (existe) {
+        throw new ConflictException(
+          `Ya existe un programa de estudio con el nombre "${updateDto.nombre}"`,
+        );
+      }
     }
+
+    return await this.programaEstudioRepository.update(id, updateDto);
   }
 
   /**
@@ -151,21 +114,9 @@ export class ProgramaEstudioService {
    * @param id - ID del programa a eliminar
    * @throws NotFoundException si no se encuentra el programa
    */
-  async remove(id: number): Promise<void> {
-    try {
-      // Verificar que existe
-      const programaEstudio = await this.findOne(id);
-
-      // Eliminar
-      await this.programaEstudioRepository.remove(programaEstudio);
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
-      throw new InternalServerErrorException(
-        'Error al eliminar el programa de estudio',
-      );
-    }
+  async remove(id: string): Promise<void> {
+    await this.findOne(id); // Verifica que existe
+    await this.programaEstudioRepository.delete(id);
   }
 
   /**
@@ -173,12 +124,17 @@ export class ProgramaEstudioService {
    * @returns Cantidad total de programas
    */
   async count(): Promise<number> {
-    try {
-      return await this.programaEstudioRepository.count();
-    } catch {
-      throw new InternalServerErrorException(
-        'Error al contar los programas de estudio',
-      );
-    }
+    return await this.programaEstudioRepository.count();
+  }
+
+  /**
+   * Busca programas por cantidad de cuatrimestres
+   */
+  async findByCantidadCuatrimestres(
+    cantidad: number,
+  ): Promise<ProgramaEstudio[]> {
+    return await this.programaEstudioRepository.findByCantidadCuatrimestres(
+      cantidad,
+    );
   }
 }

@@ -7,7 +7,7 @@ import {
   Param,
   Delete,
   HttpStatus,
-  ParseIntPipe,
+  ParseUUIDPipe,
   HttpCode,
   Res,
 } from '@nestjs/common';
@@ -131,9 +131,9 @@ export class ProgramaEstudioController {
   })
   @ApiParam({
     name: 'id',
-    type: 'number',
-    description: 'ID del programa de estudio',
-    example: 1,
+    type: 'string',
+    description: 'UUID del programa de estudio',
+    example: '550e8400-e29b-41d4-a716-446655440000',
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -145,7 +145,7 @@ export class ProgramaEstudioController {
     description: 'Programa de estudio no encontrado',
   })
   async findOne(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
   ): Promise<ProgramaEstudio> {
     return await this.programaEstudioService.findOne(id);
   }
@@ -161,9 +161,9 @@ export class ProgramaEstudioController {
   })
   @ApiParam({
     name: 'id',
-    type: 'number',
-    description: 'ID del programa de estudio a actualizar',
-    example: 1,
+    type: 'string',
+    description: 'UUID del programa de estudio a actualizar',
+    example: '550e8400-e29b-41d4-a716-446655440000',
   })
   @ApiBody({ type: UpdateProgramaEstudioDto })
   @ApiResponse({
@@ -180,7 +180,7 @@ export class ProgramaEstudioController {
     description: 'El nuevo nombre ya está en uso',
   })
   async update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() updateProgramaEstudioDto: UpdateProgramaEstudioDto,
   ): Promise<ProgramaEstudio> {
     return await this.programaEstudioService.update(
@@ -200,9 +200,9 @@ export class ProgramaEstudioController {
   })
   @ApiParam({
     name: 'id',
-    type: 'number',
-    description: 'ID del programa de estudio a eliminar',
-    example: 1,
+    type: 'string',
+    description: 'UUID del programa de estudio a eliminar',
+    example: '550e8400-e29b-41d4-a716-446655440000',
   })
   @ApiResponse({
     status: HttpStatus.NO_CONTENT,
@@ -212,7 +212,7 @@ export class ProgramaEstudioController {
     status: HttpStatus.NOT_FOUND,
     description: 'Programa de estudio no encontrado',
   })
-  async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
+  async remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     await this.programaEstudioService.remove(id);
   }
 }

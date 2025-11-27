@@ -4,23 +4,26 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
+import { Asignatura } from '../../asignatura/entities/asignatura.entity';
 
 /**
- * Entidad que representa un Programa de Estudio
+ * Entidad que representa un Programa de Estudio (Carrera)
  * Tabla: programa_estudio
  */
 @Entity('programa_estudio')
 export class ProgramaEstudio {
-  @PrimaryGeneratedColumn('increment', {
-    comment: 'ID autoincremental del programa de estudio',
+  @PrimaryGeneratedColumn('uuid', {
+    comment: 'ID único del programa de estudio',
   })
-  id: number;
+  id: string;
 
   @Column({
     type: 'varchar',
     length: 255,
     nullable: false,
+    unique: true,
     comment: 'Nombre del programa de estudio',
   })
   nombre: string;
@@ -49,4 +52,8 @@ export class ProgramaEstudio {
     comment: 'Fecha de última actualización del registro',
   })
   updatedAt: Date;
+
+  // Relaciones
+  @OneToMany(() => Asignatura, (asignatura) => asignatura.programaEstudio)
+  asignaturas: Asignatura[];
 }
