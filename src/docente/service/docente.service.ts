@@ -33,7 +33,10 @@ export class DocenteService {
   async create(createDto: CreateDocenteDto): Promise<Docente> {
     try {
       // Validar que todas las asignaturas existen
-      if (createDto.asignaturasCompetenciaIds && createDto.asignaturasCompetenciaIds.length > 0) {
+      if (
+        createDto.asignaturasCompetenciaIds &&
+        createDto.asignaturasCompetenciaIds.length > 0
+      ) {
         await this.validateAsignaturas(createDto.asignaturasCompetenciaIds);
       }
 
@@ -84,7 +87,9 @@ export class DocenteService {
       );
     }
 
-    return await this.docenteRepository.findByAsignaturaCompetencia(asignaturaId);
+    return await this.docenteRepository.findByAsignaturaCompetencia(
+      asignaturaId,
+    );
   }
 
   /**
@@ -99,7 +104,10 @@ export class DocenteService {
     await this.findOne(id);
 
     // Validar asignaturas si se proporcionan
-    if (updateDto.asignaturasCompetenciaIds && updateDto.asignaturasCompetenciaIds.length > 0) {
+    if (
+      updateDto.asignaturasCompetenciaIds &&
+      updateDto.asignaturasCompetenciaIds.length > 0
+    ) {
       await this.validateAsignaturas(updateDto.asignaturasCompetenciaIds);
     }
 
@@ -147,7 +155,10 @@ export class DocenteService {
    * @param docenteId - UUID del docente
    * @param asignaturaId - UUID de la asignatura
    */
-  async removeCompetencia(docenteId: string, asignaturaId: string): Promise<void> {
+  async removeCompetencia(
+    docenteId: string,
+    asignaturaId: string,
+  ): Promise<void> {
     await this.findOne(docenteId); // Valida que existe
     await this.docenteRepository.removeCompetencia(docenteId, asignaturaId);
   }
@@ -157,7 +168,10 @@ export class DocenteService {
    * @param docenteId - UUID del docente
    * @param asignaturaIds - Array de UUIDs de asignaturas
    */
-  async updateCompetencias(docenteId: string, asignaturaIds: string[]): Promise<void> {
+  async updateCompetencias(
+    docenteId: string,
+    asignaturaIds: string[],
+  ): Promise<void> {
     await this.findOne(docenteId); // Valida que existe
 
     if (asignaturaIds.length > 0) {

@@ -45,7 +45,9 @@ export class GrupoController {
     status: 404,
     description: 'Asignatura, docente o alumno no encontrado',
   })
-  async create(@Body() createGrupoDto: CreateGrupoDto): Promise<GrupoResponseDto> {
+  async create(
+    @Body() createGrupoDto: CreateGrupoDto,
+  ): Promise<GrupoResponseDto> {
     return await this.grupoService.create(createGrupoDto);
   }
 
@@ -55,7 +57,8 @@ export class GrupoController {
   @Get(':id')
   @ApiOperation({
     summary: 'Obtener grupo por ID',
-    description: 'Obtiene un grupo específico con sus relaciones (asignatura, docente, alumnos)',
+    description:
+      'Obtiene un grupo específico con sus relaciones (asignatura, docente, alumnos)',
   })
   @ApiParam({
     name: 'id',
@@ -71,7 +74,9 @@ export class GrupoController {
     status: 404,
     description: 'Grupo no encontrado',
   })
-  async findById(@Param('id', ParseUUIDPipe) id: string): Promise<GrupoResponseDto> {
+  async findById(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<GrupoResponseDto> {
     return await this.grupoService.findById(id);
   }
 
@@ -185,7 +190,8 @@ export class GrupoController {
   @Get('filter/asignatura/:asignaturaId')
   @ApiOperation({
     summary: 'Buscar grupos por asignatura',
-    description: 'Obtiene todos los grupos que imparten una asignatura específica',
+    description:
+      'Obtiene todos los grupos que imparten una asignatura específica',
   })
   @ApiParam({
     name: 'asignaturaId',
@@ -378,7 +384,9 @@ export class GrupoController {
     status: 404,
     description: 'Grupo no encontrado',
   })
-  async countAlumnos(@Param('id', ParseUUIDPipe) id: string): Promise<{ count: number }> {
+  async countAlumnos(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<{ count: number }> {
     const count = await this.grupoService.countAlumnos(id);
     return { count };
   }

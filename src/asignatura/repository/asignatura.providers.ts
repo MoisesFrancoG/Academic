@@ -9,7 +9,8 @@ import { AsignaturaRepository } from './asignatura.repository';
 export const asignaturaProviders = [
   {
     provide: 'ASIGNATURA_REPOSITORY',
-    useFactory: (dataSource: DataSource) => dataSource.getRepository(Asignatura),
+    useFactory: (dataSource: DataSource) =>
+      dataSource.getRepository(Asignatura),
     inject: ['DATA_SOURCE'],
   },
   {

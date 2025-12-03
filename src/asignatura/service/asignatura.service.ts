@@ -93,16 +93,21 @@ export class AsignaturaService {
    * @param programaEstudioId - UUID del programa de estudio
    * @returns Lista de asignaturas del programa
    */
-  async findByProgramaEstudio(programaEstudioId: string): Promise<Asignatura[]> {
+  async findByProgramaEstudio(
+    programaEstudioId: string,
+  ): Promise<Asignatura[]> {
     // Validar que el programa existe
-    const programa = await this.programaEstudioRepository.findById(programaEstudioId);
+    const programa =
+      await this.programaEstudioRepository.findById(programaEstudioId);
     if (!programa) {
       throw new NotFoundException(
         `Programa de estudio con ID ${programaEstudioId} no encontrado`,
       );
     }
 
-    return await this.asignaturaRepository.findByProgramaEstudio(programaEstudioId);
+    return await this.asignaturaRepository.findByProgramaEstudio(
+      programaEstudioId,
+    );
   }
 
   /**
@@ -138,7 +143,10 @@ export class AsignaturaService {
    * @throws NotFoundException si no se encuentra la asignatura o el programa
    * @throws BadRequestException si el cuatrimestre excede el límite
    */
-  async update(id: string, updateDto: UpdateAsignaturaDto): Promise<Asignatura> {
+  async update(
+    id: string,
+    updateDto: UpdateAsignaturaDto,
+  ): Promise<Asignatura> {
     // Verificar que la asignatura existe
     const asignatura = await this.findOne(id);
 
@@ -167,7 +175,10 @@ export class AsignaturaService {
         asignatura.programaEstudioId,
       );
 
-      if (programaEstudio && updateDto.cuatrimestre > programaEstudio.cantidadCuatrimestres) {
+      if (
+        programaEstudio &&
+        updateDto.cuatrimestre > programaEstudio.cantidadCuatrimestres
+      ) {
         throw new BadRequestException(
           `El cuatrimestre ${updateDto.cuatrimestre} excede el límite del programa "${programaEstudio.nombre}" (${programaEstudio.cantidadCuatrimestres} cuatrimestres)`,
         );
@@ -201,6 +212,8 @@ export class AsignaturaService {
    * @returns Cantidad de asignaturas del programa
    */
   async countByProgramaEstudio(programaEstudioId: string): Promise<number> {
-    return await this.asignaturaRepository.countByProgramaEstudio(programaEstudioId);
+    return await this.asignaturaRepository.countByProgramaEstudio(
+      programaEstudioId,
+    );
   }
 }

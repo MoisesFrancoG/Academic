@@ -23,13 +23,23 @@ export class GrupoRepository implements IGrupoRepository {
   async findById(id: string): Promise<Grupo | null> {
     return await this.grupoRepository.findOne({
       where: { id },
-      relations: ['asignatura', 'asignatura.programaEstudio', 'docente', 'alumnos'],
+      relations: [
+        'asignatura',
+        'asignatura.programaEstudio',
+        'docente',
+        'alumnos',
+      ],
     });
   }
 
   async findAll(): Promise<Grupo[]> {
     return await this.grupoRepository.find({
-      relations: ['asignatura', 'asignatura.programaEstudio', 'docente', 'alumnos'],
+      relations: [
+        'asignatura',
+        'asignatura.programaEstudio',
+        'docente',
+        'alumnos',
+      ],
     });
   }
 
@@ -39,7 +49,11 @@ export class GrupoRepository implements IGrupoRepository {
 
   async delete(id: string): Promise<boolean> {
     const result = await this.grupoRepository.delete(id);
-    return result.affected !== null && result.affected !== undefined && result.affected > 0;
+    return (
+      result.affected !== null &&
+      result.affected !== undefined &&
+      result.affected > 0
+    );
   }
 
   async count(): Promise<number> {
@@ -49,14 +63,24 @@ export class GrupoRepository implements IGrupoRepository {
   async findByAsignatura(asignaturaId: string): Promise<Grupo[]> {
     return await this.grupoRepository.find({
       where: { asignatura: { id: asignaturaId } },
-      relations: ['asignatura', 'asignatura.programaEstudio', 'docente', 'alumnos'],
+      relations: [
+        'asignatura',
+        'asignatura.programaEstudio',
+        'docente',
+        'alumnos',
+      ],
     });
   }
 
   async findByDocente(docenteId: string): Promise<Grupo[]> {
     return await this.grupoRepository.find({
       where: { docente: { id: docenteId } },
-      relations: ['asignatura', 'asignatura.programaEstudio', 'docente', 'alumnos'],
+      relations: [
+        'asignatura',
+        'asignatura.programaEstudio',
+        'docente',
+        'alumnos',
+      ],
     });
   }
 
@@ -96,7 +120,7 @@ export class GrupoRepository implements IGrupoRepository {
       await this.grupoRepository.save(grupo);
     }
 
-    return await this.findById(grupoId) as Grupo;
+    return (await this.findById(grupoId)) as Grupo;
   }
 
   async removeAlumno(grupoId: string, alumnoId: string): Promise<Grupo> {
@@ -112,7 +136,7 @@ export class GrupoRepository implements IGrupoRepository {
     grupo.alumnos = grupo.alumnos?.filter((a) => a.id !== alumnoId) || [];
     await this.grupoRepository.save(grupo);
 
-    return await this.findById(grupoId) as Grupo;
+    return (await this.findById(grupoId)) as Grupo;
   }
 
   async updateAlumnos(grupoId: string, alumnoIds: string[]): Promise<Grupo> {
@@ -138,7 +162,7 @@ export class GrupoRepository implements IGrupoRepository {
     grupo.alumnos = alumnos;
     await this.grupoRepository.save(grupo);
 
-    return await this.findById(grupoId) as Grupo;
+    return (await this.findById(grupoId)) as Grupo;
   }
 
   async countAlumnos(grupoId: string): Promise<number> {

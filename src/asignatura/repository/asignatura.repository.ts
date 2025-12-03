@@ -35,7 +35,9 @@ export class AsignaturaRepository implements IAsignaturaRepository {
     });
   }
 
-  async findByProgramaEstudio(programaEstudioId: string): Promise<Asignatura[]> {
+  async findByProgramaEstudio(
+    programaEstudioId: string,
+  ): Promise<Asignatura[]> {
     return await this.repository.find({
       where: { programaEstudioId },
       relations: ['programaEstudio'],
@@ -62,7 +64,10 @@ export class AsignaturaRepository implements IAsignaturaRepository {
     });
   }
 
-  async update(id: string, updateDto: UpdateAsignaturaDto): Promise<Asignatura> {
+  async update(
+    id: string,
+    updateDto: UpdateAsignaturaDto,
+  ): Promise<Asignatura> {
     await this.repository.update(id, updateDto);
     const updated = await this.findById(id);
     if (!updated) {

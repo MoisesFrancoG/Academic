@@ -1,5 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, MinLength, MaxLength, IsUUID, IsArray, IsOptional } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  MinLength,
+  MaxLength,
+  IsUUID,
+  IsArray,
+  IsOptional,
+} from 'class-validator';
 
 /**
  * DTO para crear un nuevo grupo
@@ -37,7 +45,10 @@ export class CreateGrupoDto {
 
   @ApiProperty({
     description: 'Lista de UUIDs de alumnos inscritos en el grupo',
-    example: ['770e8400-e29b-41d4-a716-446655440002', '880e8400-e29b-41d4-a716-446655440003'],
+    example: [
+      '770e8400-e29b-41d4-a716-446655440002',
+      '880e8400-e29b-41d4-a716-446655440003',
+    ],
     required: false,
     type: [String],
   })

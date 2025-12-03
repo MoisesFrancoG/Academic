@@ -1,4 +1,9 @@
-import { Injectable, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import type { IGrupoRepository } from '../repository/grupo.repository.interface';
 import type { IAsignaturaRepository } from '../../asignatura/repository/asignatura.repository.interface';
 import type { IDocenteRepository } from '../../docente/repository/docente.repository.interface';
@@ -34,7 +39,9 @@ export class GrupoService {
     // Validar que la asignatura existe
     const asignatura = await this.asignaturaRepository.findById(asignaturaId);
     if (!asignatura) {
-      throw new NotFoundException(`Asignatura con ID ${asignaturaId} no encontrada`);
+      throw new NotFoundException(
+        `Asignatura con ID ${asignaturaId} no encontrada`,
+      );
     }
 
     // Validar que el docente existe
@@ -44,8 +51,11 @@ export class GrupoService {
     }
 
     // Validar que el docente tenga competencia en la asignatura
-    const docenteConCompetencia = await this.docenteRepository.findByAsignaturaCompetencia(asignaturaId);
-    const tieneCompetencia = docenteConCompetencia.some((d) => d.id === docenteId);
+    const docenteConCompetencia =
+      await this.docenteRepository.findByAsignaturaCompetencia(asignaturaId);
+    const tieneCompetencia = docenteConCompetencia.some(
+      (d) => d.id === docenteId,
+    );
     if (!tieneCompetencia) {
       throw new BadRequestException(
         `El docente ${docente.nombre} no tiene competencia para impartir la asignatura ${asignatura.nombre}`,
@@ -100,7 +110,10 @@ export class GrupoService {
    * Valida asignatura y docente si cambian
    * Valida competencia del docente con la asignatura
    */
-  async update(id: string, updateGrupoDto: UpdateGrupoDto): Promise<GrupoResponseDto> {
+  async update(
+    id: string,
+    updateGrupoDto: UpdateGrupoDto,
+  ): Promise<GrupoResponseDto> {
     const grupo = await this.grupoRepository.findById(id);
     if (!grupo) {
       throw new NotFoundException(`Grupo con ID ${id} no encontrado`);
@@ -120,7 +133,9 @@ export class GrupoService {
     if (asignaturaId !== undefined) {
       const asignatura = await this.asignaturaRepository.findById(asignaturaId);
       if (!asignatura) {
-        throw new NotFoundException(`Asignatura con ID ${asignaturaId} no encontrada`);
+        throw new NotFoundException(
+          `Asignatura con ID ${asignaturaId} no encontrada`,
+        );
       }
       grupo.asignatura = asignatura;
       newAsignaturaId = asignaturaId;
@@ -129,15 +144,20 @@ export class GrupoService {
     if (docenteId !== undefined) {
       const docente = await this.docenteRepository.findById(docenteId);
       if (!docente) {
-        throw new NotFoundException(`Docente con ID ${docenteId} no encontrado`);
+        throw new NotFoundException(
+          `Docente con ID ${docenteId} no encontrado`,
+        );
       }
       grupo.docente = docente;
       newDocenteId = docenteId;
     }
 
     // Validar competencia del docente con la asignatura (nueva o existente)
-    const docenteConCompetencia = await this.docenteRepository.findByAsignaturaCompetencia(newAsignaturaId);
-    const tieneCompetencia = docenteConCompetencia.some((d) => d.id === newDocenteId);
+    const docenteConCompetencia =
+      await this.docenteRepository.findByAsignaturaCompetencia(newAsignaturaId);
+    const tieneCompetencia = docenteConCompetencia.some(
+      (d) => d.id === newDocenteId,
+    );
     if (!tieneCompetencia) {
       throw new BadRequestException(
         `El docente no tiene competencia para impartir esta asignatura`,
@@ -212,7 +232,10 @@ export class GrupoService {
   /**
    * Añade un alumno a un grupo
    */
-  async addAlumno(grupoId: string, alumnoId: string): Promise<GrupoResponseDto> {
+  async addAlumno(
+    grupoId: string,
+    alumnoId: string,
+  ): Promise<GrupoResponseDto> {
     // Validar que el grupo existe
     const grupo = await this.grupoRepository.findById(grupoId);
     if (!grupo) {
@@ -225,28 +248,40 @@ export class GrupoService {
       throw new NotFoundException(`Alumno con ID ${alumnoId} no encontrado`);
     }
 
-    const updatedGrupo = await this.grupoRepository.addAlumno(grupoId, alumnoId);
+    const updatedGrupo = await this.grupoRepository.addAlumno(
+      grupoId,
+      alumnoId,
+    );
     return this.toResponseDto(updatedGrupo);
   }
 
   /**
    * Elimina un alumno de un grupo
    */
-  async removeAlumno(grupoId: string, alumnoId: string): Promise<GrupoResponseDto> {
+  async removeAlumno(
+    grupoId: string,
+    alumnoId: string,
+  ): Promise<GrupoResponseDto> {
     // Validar que el grupo existe
     const grupo = await this.grupoRepository.findById(grupoId);
     if (!grupo) {
       throw new NotFoundException(`Grupo con ID ${grupoId} no encontrado`);
     }
 
-    const updatedGrupo = await this.grupoRepository.removeAlumno(grupoId, alumnoId);
+    const updatedGrupo = await this.grupoRepository.removeAlumno(
+      grupoId,
+      alumnoId,
+    );
     return this.toResponseDto(updatedGrupo);
   }
 
   /**
    * Actualiza la lista completa de alumnos de un grupo
    */
-  async updateAlumnos(grupoId: string, alumnoIds: string[]): Promise<GrupoResponseDto> {
+  async updateAlumnos(
+    grupoId: string,
+    alumnoIds: string[],
+  ): Promise<GrupoResponseDto> {
     // Validar que el grupo existe
     const grupo = await this.grupoRepository.findById(grupoId);
     if (!grupo) {
@@ -258,7 +293,10 @@ export class GrupoService {
       await this.validateAlumnos(alumnoIds);
     }
 
-    const updatedGrupo = await this.grupoRepository.updateAlumnos(grupoId, alumnoIds);
+    const updatedGrupo = await this.grupoRepository.updateAlumnos(
+      grupoId,
+      alumnoIds,
+    );
     return this.toResponseDto(updatedGrupo);
   }
 

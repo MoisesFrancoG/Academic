@@ -25,7 +25,10 @@ export class DocenteRepository implements IDocenteRepository {
     });
 
     // Si se proporcionan competencias, cargarlas
-    if (createDto.asignaturasCompetenciaIds && createDto.asignaturasCompetenciaIds.length > 0) {
+    if (
+      createDto.asignaturasCompetenciaIds &&
+      createDto.asignaturasCompetenciaIds.length > 0
+    ) {
       const asignaturas = await this.asignaturaRepository.find({
         where: { id: In(createDto.asignaturasCompetenciaIds) },
       });
@@ -51,7 +54,10 @@ export class DocenteRepository implements IDocenteRepository {
   async findByIdWithRelations(id: string): Promise<Docente | null> {
     return await this.repository.findOne({
       where: { id },
-      relations: ['asignaturasCompetencia', 'asignaturasCompetencia.programaEstudio'],
+      relations: [
+        'asignaturasCompetencia',
+        'asignaturasCompetencia.programaEstudio',
+      ],
     });
   }
 
@@ -117,14 +123,19 @@ export class DocenteRepository implements IDocenteRepository {
     }
 
     // Verificar si ya tiene esta competencia
-    const yaExiste = docente.asignaturasCompetencia.some(a => a.id === asignaturaId);
+    const yaExiste = docente.asignaturasCompetencia.some(
+      (a) => a.id === asignaturaId,
+    );
     if (!yaExiste) {
       docente.asignaturasCompetencia.push(asignatura);
       await this.repository.save(docente);
     }
   }
 
-  async removeCompetencia(docenteId: string, asignaturaId: string): Promise<void> {
+  async removeCompetencia(
+    docenteId: string,
+    asignaturaId: string,
+  ): Promise<void> {
     const docente = await this.repository.findOne({
       where: { id: docenteId },
       relations: ['asignaturasCompetencia'],
@@ -135,13 +146,16 @@ export class DocenteRepository implements IDocenteRepository {
     }
 
     docente.asignaturasCompetencia = docente.asignaturasCompetencia.filter(
-      a => a.id !== asignaturaId,
+      (a) => a.id !== asignaturaId,
     );
 
     await this.repository.save(docente);
   }
 
-  async updateCompetencias(docenteId: string, asignaturaIds: string[]): Promise<void> {
+  async updateCompetencias(
+    docenteId: string,
+    asignaturaIds: string[],
+  ): Promise<void> {
     const docente = await this.repository.findOne({
       where: { id: docenteId },
       relations: ['asignaturasCompetencia'],

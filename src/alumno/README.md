@@ -38,15 +38,17 @@ src/alumno/
 ### 1. DTOs (Data Transfer Objects)
 
 #### CreateAlumnoDto
+
 ```typescript
 {
-  nombre: string;           // Min 3, Max 255 chars
-  matricula: string;        // Min 5, Max 50 chars, UNIQUE
-  cuatrimestreActual: number;  // Min 1
+  nombre: string; // Min 3, Max 255 chars
+  matricula: string; // Min 5, Max 50 chars, UNIQUE
+  cuatrimestreActual: number; // Min 1
 }
 ```
 
 **Validaciones:**
+
 - ✅ `@IsString()` - Valida tipo string
 - ✅ `@IsNotEmpty()` - Campo obligatorio
 - ✅ `@MinLength()` / `@MaxLength()` - Longitud
@@ -54,9 +56,11 @@ src/alumno/
 - ✅ `@Min()` - Valor mínimo
 
 #### UpdateAlumnoDto
+
 Extiende `PartialType(CreateAlumnoDto)` - Todos los campos opcionales.
 
 #### AlumnoResponseDto
+
 Incluye todos los campos de la entidad para respuestas Swagger.
 
 ---
@@ -64,7 +68,9 @@ Incluye todos los campos de la entidad para respuestas Swagger.
 ### 2. Repository Pattern
 
 #### IAlumnoRepository (Interface)
+
 Define el contrato del repositorio con métodos:
+
 - `create(dto)` - Crear alumno
 - `findAll()` - Listar todos
 - `findById(id)` - Buscar por UUID
@@ -77,9 +83,11 @@ Define el contrato del repositorio con métodos:
 - `existsByMatriculaExcludingId(mat, id)` - Verificar (excluyendo ID)
 
 #### AlumnoRepository (Implementation)
+
 Implementación concreta usando TypeORM `Repository<Alumno>`.
 
 **Características:**
+
 - ✅ Inyección de `ALUMNO_REPOSITORY`
 - ✅ Ordenamiento por `createdAt DESC`
 - ✅ Uso de `Not()` para exclusiones
@@ -90,25 +98,29 @@ Implementación concreta usando TypeORM `Repository<Alumno>`.
 ### 3. Service (Lógica de Negocio)
 
 #### AlumnoService
+
 **Responsabilidades:**
+
 - Validación de unicidad de matrícula
 - Manejo de excepciones (NotFoundException, ConflictException)
 - Orquestación de operaciones del repositorio
 - Lógica de negocio desacoplada de TypeORM
 
 **Métodos Principales:**
+
 ```typescript
-create(dto)              // Valida matrícula única
-findAll()                // Lista todos
-findOne(id)              // Busca por ID con validación
-findByMatricula(mat)     // Busca por matrícula
-findByCuatrimestre(num)  // Filtra por cuatrimestre
-update(id, dto)          // Actualiza con validaciones
-remove(id)               // Elimina (soft validation)
-count()                  // Cuenta total
+create(dto); // Valida matrícula única
+findAll(); // Lista todos
+findOne(id); // Busca por ID con validación
+findByMatricula(mat); // Busca por matrícula
+findByCuatrimestre(num); // Filtra por cuatrimestre
+update(id, dto); // Actualiza con validaciones
+remove(id); // Elimina (soft validation)
+count(); // Cuenta total
 ```
 
 **Validaciones de Negocio:**
+
 - ✅ Matrícula única al crear
 - ✅ Matrícula única al actualizar (excluyendo el propio registro)
 - ✅ Existencia del alumno antes de actualizar/eliminar
@@ -121,18 +133,19 @@ count()                  // Cuenta total
 
 **Endpoints Disponibles:**
 
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| POST | `/alumno` | Crear nuevo alumno |
-| GET | `/alumno` | Listar todos los alumnos |
-| GET | `/alumno/count` | Contar alumnos |
-| GET | `/alumno/cuatrimestre/:cuatrimestre` | Filtrar por cuatrimestre |
-| GET | `/alumno/matricula/:matricula` | Buscar por matrícula |
-| GET | `/alumno/:id` | Obtener por ID (UUID) |
-| PATCH | `/alumno/:id` | Actualizar alumno |
-| DELETE | `/alumno/:id` | Eliminar alumno |
+| Método | Ruta                                 | Descripción              |
+| ------ | ------------------------------------ | ------------------------ |
+| POST   | `/alumno`                            | Crear nuevo alumno       |
+| GET    | `/alumno`                            | Listar todos los alumnos |
+| GET    | `/alumno/count`                      | Contar alumnos           |
+| GET    | `/alumno/cuatrimestre/:cuatrimestre` | Filtrar por cuatrimestre |
+| GET    | `/alumno/matricula/:matricula`       | Buscar por matrícula     |
+| GET    | `/alumno/:id`                        | Obtener por ID (UUID)    |
+| PATCH  | `/alumno/:id`                        | Actualizar alumno        |
+| DELETE | `/alumno/:id`                        | Eliminar alumno          |
 
 **Características:**
+
 - ✅ Documentación Swagger completa
 - ✅ `ParseUUIDPipe` para validar IDs
 - ✅ `ParseIntPipe` para cuatrimestre
@@ -166,6 +179,7 @@ AlumnoModule
 ## 🚀 Endpoints Swagger
 
 Todos los endpoints están documentados en Swagger con:
+
 - ✅ Descripciones detalladas
 - ✅ Ejemplos de request/response
 - ✅ Códigos de estado HTTP
@@ -178,16 +192,19 @@ Todos los endpoints están documentados en Swagger con:
 ## ✅ Validaciones Implementadas
 
 ### Validaciones de DTO
+
 - Nombre: 3-255 caracteres, requerido
 - Matrícula: 5-50 caracteres, requerido, único
 - Cuatrimestre: entero >= 1, requerido
 
 ### Validaciones de Negocio
+
 - Matrícula única en creación
 - Matrícula única en actualización (excluyendo el mismo registro)
 - Alumno debe existir para actualizar/eliminar
 
 ### Validaciones de Ruta
+
 - ID debe ser UUID válido v4
 - Cuatrimestre debe ser número entero
 
@@ -195,15 +212,15 @@ Todos los endpoints están documentados en Swagger con:
 
 ## 📊 Respuestas HTTP
 
-| Código | Descripción |
-|--------|-------------|
-| 200 OK | Operación exitosa con datos |
-| 201 Created | Alumno creado |
-| 204 No Content | Sin datos o eliminación exitosa |
-| 400 Bad Request | Datos inválidos |
-| 404 Not Found | Alumno no encontrado |
-| 409 Conflict | Matrícula duplicada |
-| 500 Internal Server Error | Error del servidor |
+| Código                    | Descripción                     |
+| ------------------------- | ------------------------------- |
+| 200 OK                    | Operación exitosa con datos     |
+| 201 Created               | Alumno creado                   |
+| 204 No Content            | Sin datos o eliminación exitosa |
+| 400 Bad Request           | Datos inválidos                 |
+| 404 Not Found             | Alumno no encontrado            |
+| 409 Conflict              | Matrícula duplicada             |
+| 500 Internal Server Error | Error del servidor              |
 
 ---
 
@@ -239,6 +256,7 @@ El módulo de Alumno está **100% completo** y funcional. Patrón a seguir para 
 ## 🎓 Ejemplo de Uso
 
 ### Crear Alumno
+
 ```bash
 POST /alumno
 {
@@ -249,11 +267,13 @@ POST /alumno
 ```
 
 ### Buscar por Cuatrimestre
+
 ```bash
 GET /alumno/cuatrimestre/5
 ```
 
 ### Actualizar
+
 ```bash
 PATCH /alumno/550e8400-e29b-41d4-a716-446655440000
 {

@@ -160,7 +160,8 @@ export class AsignaturaController {
   @Get('programa/:programaId')
   @ApiOperation({
     summary: 'Buscar asignaturas por programa de estudio',
-    description: 'Retorna todas las asignaturas de un programa de estudio específico',
+    description:
+      'Retorna todas las asignaturas de un programa de estudio específico',
   })
   @ApiParam({
     name: 'programaId',

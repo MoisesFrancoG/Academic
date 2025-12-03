@@ -21,11 +21,7 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { AlumnoService } from '../service/alumno.service';
-import {
-  CreateAlumnoDto,
-  UpdateAlumnoDto,
-  AlumnoResponseDto,
-} from '../DTOs';
+import { CreateAlumnoDto, UpdateAlumnoDto, AlumnoResponseDto } from '../DTOs';
 import { Alumno } from '../entities/alumno.entity';
 
 /**
@@ -124,7 +120,8 @@ export class AlumnoController {
   @Get('cuatrimestre/:cuatrimestre')
   @ApiOperation({
     summary: 'Buscar alumnos por cuatrimestre',
-    description: 'Retorna todos los alumnos que cursan un cuatrimestre específico',
+    description:
+      'Retorna todos los alumnos que cursan un cuatrimestre específico',
   })
   @ApiParam({
     name: 'cuatrimestre',

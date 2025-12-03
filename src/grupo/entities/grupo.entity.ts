@@ -40,7 +40,8 @@ export class Grupo {
     length: 255,
     nullable: false,
     name: 'asignatura_nombre_snapshot',
-    comment: 'Snapshot del nombre de la asignatura al momento de crear el grupo',
+    comment:
+      'Snapshot del nombre de la asignatura al momento de crear el grupo',
   })
   asignaturaNombreSnapshot: string;
 

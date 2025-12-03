@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # Base de datos PostgreSQL
+  postgres:
+    image: postgres:16-alpine
+    container_name: academic-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: academic_user
+      POSTGRES_PASSWORD: academic_password
+      POSTGRES_DB: academic_db
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - academic-network
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U academic_user -d academic_db']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # API NestJS
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: academic-api
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: academic_user
+      DB_PASSWORD: academic_password
+      DB_DATABASE: academic_db
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - academic-network
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "require('http').get('http://localhost:3000', (res) => process.exit(res.statusCode === 200 ? 0 : 1))",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  academic-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local

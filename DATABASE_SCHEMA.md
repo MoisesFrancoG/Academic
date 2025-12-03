@@ -32,19 +32,20 @@ Inscripciones: Grupo (M) ◄──────────► (M) Alumno
 ## 🗃️ Entidades Detalladas
 
 ### 1. ProgramaEstudio
+
 **Archivo:** `src/programa-estudio/entities/programa-estudio.entity.ts`
 
 ```typescript
 @Entity('programa_estudio')
 class ProgramaEstudio {
-  id: string;                    // UUID
-  nombre: string;                // Unique
+  id: string; // UUID
+  nombre: string; // Unique
   cantidadCuatrimestres: number;
   createdAt: Date;
   updatedAt: Date;
-  
+
   // Relaciones
-  asignaturas: Asignatura[];     // OneToMany
+  asignaturas: Asignatura[]; // OneToMany
 }
 ```
 
@@ -53,21 +54,22 @@ class ProgramaEstudio {
 ---
 
 ### 2. Asignatura
+
 **Archivo:** `src/asignatura/entities/asignatura.entity.ts`
 
 ```typescript
 @Entity('asignatura')
 class Asignatura {
-  id: string;                    // UUID
+  id: string; // UUID
   nombre: string;
   cuatrimestre: number;
-  programaEstudioId: string;     // FK
+  programaEstudioId: string; // FK
   createdAt: Date;
   updatedAt: Date;
-  
+
   // Relaciones
-  programaEstudio: ProgramaEstudio;  // ManyToOne (CASCADE)
-  grupos: Grupo[];                   // OneToMany
+  programaEstudio: ProgramaEstudio; // ManyToOne (CASCADE)
+  grupos: Grupo[]; // OneToMany
 }
 ```
 
@@ -76,19 +78,20 @@ class Asignatura {
 ---
 
 ### 3. Docente
+
 **Archivo:** `src/docente/entities/docente.entity.ts`
 
 ```typescript
 @Entity('docente')
 class Docente {
-  id: string;                    // UUID
+  id: string; // UUID
   nombre: string;
   createdAt: Date;
   updatedAt: Date;
-  
+
   // Relaciones
-  asignaturasCompetencia: Asignatura[];  // ManyToMany con @JoinTable
-  grupos: Grupo[];                       // OneToMany
+  asignaturasCompetencia: Asignatura[]; // ManyToMany con @JoinTable
+  grupos: Grupo[]; // OneToMany
 }
 ```
 
@@ -99,20 +102,21 @@ class Docente {
 ---
 
 ### 4. Alumno
+
 **Archivo:** `src/alumno/entities/alumno.entity.ts`
 
 ```typescript
 @Entity('alumno')
 class Alumno {
-  id: string;                    // UUID
+  id: string; // UUID
   nombre: string;
-  matricula: string;             // Unique
+  matricula: string; // Unique
   cuatrimestreActual: number;
   createdAt: Date;
   updatedAt: Date;
-  
+
   // Relaciones
-  grupos: Grupo[];               // ManyToMany (inverse side)
+  grupos: Grupo[]; // ManyToMany (inverse side)
 }
 ```
 
@@ -121,6 +125,7 @@ class Alumno {
 ---
 
 ### 5. Grupo
+
 **Archivo:** `src/grupo/entities/grupo.entity.ts`
 
 ```typescript
@@ -134,12 +139,12 @@ class Grupo {
   docenteId: string;                  // FK
   createdAt: Date;
   updatedAt: Date;
-  
+
   // Relaciones
   asignatura: Asignatura;             // ManyToOne
   docente: Docente;                   // ManyToOne
   alumnos: Alumno[];                  // ManyToMany con @JoinTable
-  
+
   // Hooks
   @BeforeInsert()
   @BeforeUpdate()
@@ -158,24 +163,30 @@ class Grupo {
 ## 🔑 Características Implementadas
 
 ### ✅ UUIDs como Primary Keys
+
 Todas las entidades utilizan `@PrimaryGeneratedColumn('uuid')` en lugar de auto-increment integers.
 
 ### ✅ Relaciones TypeORM
+
 - **OneToMany / ManyToOne:** ProgramaEstudio → Asignatura, Asignatura → Grupo, Docente → Grupo
 - **ManyToMany:** Docente ↔ Asignatura (competencias), Grupo ↔ Alumno (inscripciones)
 - **@JoinTable:** En el lado "owning" de relaciones ManyToMany (Docente, Grupo)
 - **@JoinColumn:** Especifica nombres de columnas FK en relaciones ManyToOne
 
 ### ✅ Cascading
+
 La relación `ProgramaEstudio → Asignatura` tiene `{ onDelete: 'CASCADE' }` para eliminación en cascada.
 
 ### ✅ Snapshots (Grupo)
+
 Campos snapshot que preservan nombres históricos de asignatura y docente usando hooks `@BeforeInsert/@BeforeUpdate`.
 
 ### ✅ Timestamps
+
 Todas las entidades tienen `createdAt` y `updatedAt` con `@CreateDateColumn` y `@UpdateDateColumn`.
 
 ### ✅ Constraints
+
 - `nombre` es UNIQUE en `ProgramaEstudio`
 - `matricula` es UNIQUE en `Alumno`
 
@@ -198,6 +209,7 @@ TypeORM generará las siguientes tablas:
 ## 🔄 Estado de Actualización
 
 ### ✅ Completado - ProgramaEstudio Module
+
 - ✅ Entidad actualizada a UUID
 - ✅ Interface repository actualizada (string IDs)
 - ✅ Repository implementation actualizada (string IDs)
@@ -206,13 +218,16 @@ TypeORM generará las siguientes tablas:
 - ✅ Relación OneToMany con Asignatura descomentada
 
 ### ✅ Completado - Nuevas Entidades
+
 - ✅ Asignatura entity creada con UUID y relaciones
 - ✅ Docente entity creada con UUID y relaciones ManyToMany
 - ✅ Alumno entity creada con UUID
 - ✅ Grupo entity creada con UUID, snapshots y hooks
 
 ### ⚠️ Pendiente - Nuevos Módulos Completos
+
 Los siguientes módulos necesitan implementación completa (DTOs, Repository, Service, Controller, Module):
+
 - Asignatura module
 - Docente module
 - Alumno module
@@ -267,19 +282,24 @@ Para completar la implementación del sistema académico:
 ## 📝 Notas Técnicas
 
 ### Naming Conventions
+
 - **Entidades TypeScript:** PascalCase (ProgramaEstudio, Asignatura)
 - **Tablas DB:** snake_case (programa_estudio, asignatura)
 - **Columnas DB:** snake_case (programa_estudio_id, created_at)
 - **Properties TS:** camelCase (programaEstudioId, createdAt)
 
 ### UUID Format
+
 TypeORM generará UUIDs v4 automáticamente:
+
 ```
 550e8400-e29b-41d4-a716-446655440000
 ```
 
 ### Migration Strategy
+
 Se recomienda generar y ejecutar migraciones TypeORM:
+
 ```bash
 pnpm run migration:generate -- src/migrations/CreateAcademicSchema
 pnpm run migration:run

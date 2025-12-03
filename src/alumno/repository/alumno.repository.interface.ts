@@ -56,5 +56,8 @@ export interface IAlumnoRepository {
   /**
    * Verifica si existe un alumno con la matrícula dada, excluyendo un ID específico
    */
-  existsByMatriculaExcludingId(matricula: string, excludeId: string): Promise<boolean>;
+  existsByMatriculaExcludingId(
+    matricula: string,
+    excludeId: string,
+  ): Promise<boolean>;
 }

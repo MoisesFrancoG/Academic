@@ -1,5 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, MinLength, MaxLength, IsInt, Min, Max, IsUUID } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  MinLength,
+  MaxLength,
+  IsInt,
+  Min,
+  Max,
+  IsUUID,
+} from 'class-validator';
 
 /**
  * DTO para crear una nueva asignatura
@@ -33,8 +42,12 @@ export class CreateAsignaturaDto {
     description: 'UUID del programa de estudio al que pertenece la asignatura',
     example: '550e8400-e29b-41d4-a716-446655440000',
   })
-  @IsString({ message: 'El ID del programa de estudio debe ser una cadena de texto' })
+  @IsString({
+    message: 'El ID del programa de estudio debe ser una cadena de texto',
+  })
   @IsNotEmpty({ message: 'El ID del programa de estudio es obligatorio' })
-  @IsUUID('4', { message: 'El ID del programa de estudio debe ser un UUID válido' })
+  @IsUUID('4', {
+    message: 'El ID del programa de estudio debe ser un UUID válido',
+  })
   programaEstudioId: string;
 }

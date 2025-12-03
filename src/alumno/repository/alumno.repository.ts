@@ -70,9 +70,12 @@ export class AlumnoRepository implements IAlumnoRepository {
     return count > 0;
   }
 
-  async existsByMatriculaExcludingId(matricula: string, excludeId: string): Promise<boolean> {
+  async existsByMatriculaExcludingId(
+    matricula: string,
+    excludeId: string,
+  ): Promise<boolean> {
     const count = await this.repository.count({
-      where: { 
+      where: {
         matricula,
         id: Not(excludeId),
       },
