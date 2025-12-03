@@ -8,11 +8,18 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Configuración de CORS
+  app.enableCors({
+    origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    credentials: true,
+  });
+
   // Configuración de pipes de validación
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true, 
-      forbidNonWhitelisted: true, 
+      whitelist: true,
+      forbidNonWhitelisted: true,
       transform: true,
     }),
   );
@@ -30,13 +37,17 @@ async function bootstrap() {
     .setVersion('1.0')
     .addTag('academic')
     .build();
-  
+
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
   await app.listen(process.env.PORT ?? 3000);
-  console.log(`Application is running on: http://localhost:${process.env.PORT ?? 3000}`);
-  console.log(`Swagger documentation: http://localhost:${process.env.PORT ?? 3000}/api/docs`);
+  console.log(
+    `Application is running on: http://localhost:${process.env.PORT ?? 3000}`,
+  );
+  console.log(
+    `Swagger documentation: http://localhost:${process.env.PORT ?? 3000}/api/docs`,
+  );
 }
 // eslint-disable-next-line @typescript-eslint/no-floating-promises
 bootstrap();
