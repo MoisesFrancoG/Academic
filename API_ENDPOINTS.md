@@ -48,6 +48,8 @@ GET /alumno/sync/pending
 ]
 ```
 
+**⚠️ Nota:** Este endpoint NO requiere relaciones pobladas porque el alumno no depende de otros recursos para ser creado en Moodle.
+
 ---
 
 #### Alumnos Eliminados Pendientes
@@ -78,6 +80,22 @@ GET /docente/sync/pending
 - `sincronizado = false`
 - `deletedAt IS NULL`
 
+**Response:** `200 OK` o `204 No Content`
+
+```json
+[
+  {
+    "id": "uuid",
+    "nombre": "Dr. Roberto Gómez",
+    "sincronizado": false,
+    "moodleUserId": null,
+    "deletedAt": null
+  }
+]
+```
+
+**⚠️ Nota:** Este endpoint NO requiere relaciones pobladas porque el docente no depende de otros recursos para ser creado en Moodle.
+
 ---
 
 #### Docentes Eliminados Pendientes
@@ -96,12 +114,48 @@ GET /docente/sync/deleted
 GET /grupo/sync/pending
 ```
 
-**Descripción:** Retorna grupos (cursos) creados o modificados pendientes de sincronización.
+**Descripción:** Retorna grupos (cursos) creados o modificados pendientes de sincronización con relaciones pobladas.
 
 **Filtros aplicados:**
 
 - `sincronizado = false`
 - `deletedAt IS NULL`
+
+**Response:** `200 OK` o `204 No Content`
+
+```json
+[
+  {
+    "id": "uuid-grupo",
+    "nombre": "Grupo A",
+    "asignaturaNombreSnapshot": "Matemáticas I",
+    "docenteNombreSnapshot": "Dr. Roberto Gómez",
+    "sincronizado": false,
+    "moodleCourseId": null,
+    "asignatura": {
+      "id": "uuid-asignatura",
+      "nombre": "Matemáticas I",
+      "cuatrimestre": 1,
+      "programaEstudio": {
+        "id": "uuid-programa",
+        "nombre": "Ingeniería en Sistemas",
+        "moodleCategoryId": 10
+      }
+    },
+    "docente": {
+      "id": "uuid-docente",
+      "nombre": "Dr. Roberto Gómez",
+      "moodleUserId": 67
+    }
+  }
+]
+```
+
+**✅ Optimización para el Orquestador:**
+
+- `asignatura.programaEstudio.moodleCategoryId` → ID de categoría necesario para crear el curso en Moodle
+- `docente.moodleUserId` → ID del profesor en Moodle para asignarlo como teacher del curso
+- Evita 2 llamadas adicionales al Backend por cada grupo
 
 ---
 
@@ -128,6 +182,23 @@ GET /programa-estudio/sync/pending
 - `sincronizado = false`
 - `deletedAt IS NULL`
 
+**Response:** `200 OK` o `204 No Content`
+
+```json
+[
+  {
+    "id": "uuid",
+    "nombre": "Ingeniería en Sistemas Computacionales",
+    "cantidadCuatrimestres": 9,
+    "sincronizado": false,
+    "moodleCategoryId": null,
+    "deletedAt": null
+  }
+]
+```
+
+**⚠️ Nota:** Este endpoint NO requiere relaciones pobladas porque el programa no depende de otros recursos.
+
 ---
 
 #### Programas Eliminados Pendientes
@@ -146,27 +217,45 @@ GET /programa-estudio/sync/deleted
 GET /inscripciones-grupo/sync/pending
 ```
 
-**Descripción:** Retorna inscripciones de alumnos a grupos (enrolments) pendientes de sincronización.
+**Descripción:** Retorna inscripciones de alumnos a grupos (enrolments) pendientes de sincronización con relaciones pobladas.
 
 **Filtros aplicados:**
 
 - `sincronizado = false`
 - `deletedAt IS NULL`
 
-**Response:** `200 OK`
+**Response:** `200 OK` o `204 No Content`
 
 ```json
 [
   {
-    "id": "uuid",
-    "grupoId": "grupo-uuid",
-    "alumnoId": "alumno-uuid",
+    "id": "uuid-inscripcion",
+    "grupoId": "uuid-grupo",
+    "alumnoId": "uuid-alumno",
     "sincronizado": false,
     "createdAt": "2024-12-03T10:00:00Z",
-    "deletedAt": null
+    "deletedAt": null,
+    "grupo": {
+      "id": "uuid-grupo",
+      "nombre": "Grupo A",
+      "moodleCourseId": 123
+    },
+    "alumno": {
+      "id": "uuid-alumno",
+      "nombre": "Juan Pérez",
+      "matricula": "A20240001",
+      "moodleUserId": 45
+    }
   }
 ]
 ```
+
+**✅ Optimización para el Orquestador:**
+
+- `grupo.moodleCourseId` → ID del curso en Moodle (necesario para el enrolment)
+- `alumno.moodleUserId` → ID del usuario en Moodle (necesario para el enrolment)
+- Evita 2 llamadas adicionales al Backend por cada inscripción
+- **Requisito crítico:** Ambos IDs (`moodleCourseId` y `moodleUserId`) deben estar presentes (no null) para poder procesar la inscripción
 
 ---
 
@@ -176,12 +265,43 @@ GET /inscripciones-grupo/sync/pending
 GET /inscripciones-grupo/sync/deleted
 ```
 
-**Descripción:** Retorna des-inscripciones (unenrolments) pendientes de procesamiento en Moodle.
+**Descripción:** Retorna des-inscripciones (unenrolments) pendientes de procesamiento en Moodle con relaciones pobladas.
 
 **Filtros aplicados:**
 
 - `sincronizado = false`
 - `deletedAt IS NOT NULL`
+
+**Response:** `200 OK` o `204 No Content`
+
+```json
+[
+  {
+    "id": "uuid-inscripcion",
+    "grupoId": "uuid-grupo",
+    "alumnoId": "uuid-alumno",
+    "sincronizado": false,
+    "createdAt": "2024-12-01T10:00:00Z",
+    "deletedAt": "2024-12-03T15:30:00Z",
+    "grupo": {
+      "id": "uuid-grupo",
+      "nombre": "Grupo A",
+      "moodleCourseId": 123
+    },
+    "alumno": {
+      "id": "uuid-alumno",
+      "nombre": "Juan Pérez",
+      "matricula": "A20240001",
+      "moodleUserId": 45
+    }
+  }
+]
+```
+
+**✅ Optimización para el Orquestador:**
+
+- Misma optimización que `/sync/pending`
+- Permite procesar unenrolments sin consultas adicionales
 
 ---
 
@@ -1080,9 +1200,9 @@ sequenceDiagram
     participant M as Moodle
 
     O->>N: GET /inscripciones-grupo/sync/pending
-    N-->>O: [{ id: "uuid", grupoId: "g1", alumnoId: "a1" }]
+    N-->>O: [{ id: "uuid", grupo: { moodleCourseId: 123 }, alumno: { moodleUserId: 45 } }]
 
-    Note over O: Obtiene moodleCourseId y moodleUserId
+    Note over O: IDs de Moodle ya incluidos en respuesta
 
     O->>M: POST /webservice/rest/server.php (enrol user)
     M-->>O: success
@@ -1116,23 +1236,34 @@ sequenceDiagram
    5. InscripcionesGrupo (Enrolments)
    ```
 
-2. **Regla de Cascada:**
+2. **Optimización de Respuestas (Reducción de Llamadas al Backend):**
+   - ✅ **Grupos:** Incluyen `asignatura.programaEstudio` y `docente` con sus `moodleId` poblados
+   - ✅ **Inscripciones:** Incluyen `grupo` y `alumno` con sus `moodleId` poblados
+   - ❌ **Alumnos/Docentes/Programas:** NO requieren relaciones (recursos independientes)
+   - **Beneficio:** El Orquestador evita 2-3 llamadas adicionales por cada recurso
+
+3. **Regla de Cascada:**
    - Cambiar nombre de Asignatura → invalida todos sus Grupos
    - El Orquestador debe re-sincronizar los grupos afectados
 
-3. **Idempotencia:**
+4. **Idempotencia:**
    - Todos los endpoints POST `/:id/sync` son idempotentes
    - Llamar múltiples veces con el mismo `moodleId` no causa problemas
 
-4. **Manejo de Errores:**
+5. **Manejo de Errores:**
    - Si Moodle falla, NO llamar el endpoint `/sync`
    - El registro permanecerá con `sincronizado = false`
    - En el siguiente ciclo, el Orquestador lo volverá a intentar
 
-5. **Soft Delete:**
+6. **Soft Delete:**
    - Los registros eliminados NO desaparecen de la BD
    - El Orquestador DEBE consultar `/sync/deleted` periódicamente
    - Después de eliminar en Moodle, confirmar con `/sync`
+
+7. **Validación de IDs de Moodle en Inscripciones:**
+   - El Orquestador DEBE verificar que `grupo.moodleCourseId` y `alumno.moodleUserId` NO sean `null`
+   - Si alguno es `null`, significa que ese recurso aún no ha sido sincronizado
+   - Debe procesar primero los Grupos y Alumnos pendientes antes de las Inscripciones
 
 ---
 
@@ -1140,3 +1271,21 @@ sequenceDiagram
 **Documentación Swagger:** `http://localhost:3000/api`  
 **Fecha:** 3 de diciembre de 2025  
 **Versión:** 0.2A - Entities Branch
+
+---
+
+## ✅ Optimizaciones Implementadas
+
+### Backend Optimizado para el Orquestador
+
+Los siguientes endpoints ya incluyen **relaciones pobladas** con los `moodleId` necesarios, eliminando la necesidad de consultas adicionales:
+
+1. **GET /grupo/sync/pending** y **GET /grupo/sync/deleted**
+   - ✅ Incluyen `asignatura.programaEstudio.moodleCategoryId`
+   - ✅ Incluyen `docente.moodleUserId`
+
+2. **GET /inscripciones-grupo/sync/pending** y **GET /inscripciones-grupo/sync/deleted**
+   - ✅ Incluyen `grupo.moodleCourseId`
+   - ✅ Incluyen `alumno.moodleUserId`
+
+**Beneficio:** El Orquestador evita 2-3 llamadas HTTP adicionales por cada recurso, reduciendo latencia y carga del servidor.

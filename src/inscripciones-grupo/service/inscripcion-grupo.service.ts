@@ -124,19 +124,65 @@ export class InscripcionGrupoService {
 
   /**
    * Obtiene inscripciones no sincronizadas (para el Orquestador)
+   * OPTIMIZACIÓN: Incluye grupo.moodleCourseId y alumno.moodleUserId
    */
-  async findUnsynchronized(): Promise<InscripcionGrupoResponseDto[]> {
+  async findUnsynchronized(): Promise<any[]> {
     const inscripciones = await this.inscripcionRepository.findUnsynchronized();
-    return inscripciones.map((i) => this.toResponseDto(i));
+    return inscripciones.map((i) => ({
+      id: i.id,
+      grupoId: i.grupoId,
+      alumnoId: i.alumnoId,
+      sincronizado: i.sincronizado,
+      createdAt: i.createdAt,
+      deletedAt: i.deletedAt,
+      grupo: i.grupo
+        ? {
+            id: i.grupo.id,
+            nombre: i.grupo.nombre,
+            moodleCourseId: i.grupo.moodleCourseId,
+          }
+        : undefined,
+      alumno: i.alumno
+        ? {
+            id: i.alumno.id,
+            nombre: i.alumno.nombre,
+            matricula: i.alumno.matricula,
+            moodleUserId: i.alumno.moodleUserId,
+          }
+        : undefined,
+    }));
   }
 
   /**
    * Obtiene inscripciones eliminadas no sincronizadas
+   * OPTIMIZACIÓN: Incluye grupo.moodleCourseId y alumno.moodleUserId
    */
-  async findDeletedUnsynchronized(): Promise<InscripcionGrupoResponseDto[]> {
+  async findDeletedUnsynchronized(): Promise<any[]> {
     const inscripciones =
       await this.inscripcionRepository.findDeletedUnsynchronized();
-    return inscripciones.map((i) => this.toResponseDto(i));
+    return inscripciones.map((i) => ({
+      id: i.id,
+      grupoId: i.grupoId,
+      alumnoId: i.alumnoId,
+      sincronizado: i.sincronizado,
+      createdAt: i.createdAt,
+      deletedAt: i.deletedAt,
+      grupo: i.grupo
+        ? {
+            id: i.grupo.id,
+            nombre: i.grupo.nombre,
+            moodleCourseId: i.grupo.moodleCourseId,
+          }
+        : undefined,
+      alumno: i.alumno
+        ? {
+            id: i.alumno.id,
+            nombre: i.alumno.nombre,
+            matricula: i.alumno.matricula,
+            moodleUserId: i.alumno.moodleUserId,
+          }
+        : undefined,
+    }));
   }
 
   /**

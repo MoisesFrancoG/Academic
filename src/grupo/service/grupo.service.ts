@@ -371,20 +371,83 @@ export class GrupoService {
   /**
    * Obtiene grupos pendientes de sincronización
    * Retorna grupos con sincronizado = false y deletedAt = null
-   * @returns Lista de grupos pendientes
+   * OPTIMIZACIÓN: Incluye relaciones anidadas para evitar consultas adicionales del Orquestador
+   * @returns Lista de grupos pendientes con asignatura.programaEstudio y docente poblados
    */
-  async findPendingSync(): Promise<GrupoResponseDto[]> {
+  async findPendingSync(): Promise<any[]> {
     const grupos = await this.grupoRepository.findUnsynchronized();
-    return grupos.map((g) => this.toResponseDto(g));
+    // Retornar el objeto completo con relaciones anidadas
+    return grupos.map((g) => ({
+      id: g.id,
+      nombre: g.nombre,
+      asignaturaNombreSnapshot: g.asignaturaNombreSnapshot,
+      docenteNombreSnapshot: g.docenteNombreSnapshot,
+      sincronizado: g.sincronizado,
+      moodleCourseId: g.moodleCourseId,
+      asignatura: g.asignatura
+        ? {
+            id: g.asignatura.id,
+            nombre: g.asignatura.nombre,
+            cuatrimestre: g.asignatura.cuatrimestre,
+            programaEstudio: g.asignatura.programaEstudio
+              ? {
+                  id: g.asignatura.programaEstudio.id,
+                  nombre: g.asignatura.programaEstudio.nombre,
+                  moodleCategoryId:
+                    g.asignatura.programaEstudio.moodleCategoryId,
+                }
+              : undefined,
+          }
+        : undefined,
+      docente: g.docente
+        ? {
+            id: g.docente.id,
+            nombre: g.docente.nombre,
+            moodleUserId: g.docente.moodleUserId,
+          }
+        : undefined,
+    }));
   }
 
   /**
    * Obtiene grupos eliminados pendientes de sincronización
    * Retorna grupos con sincronizado = false y deletedAt != null
-   * @returns Lista de grupos eliminados pendientes
+   * OPTIMIZACIÓN: Incluye relaciones anidadas para evitar consultas adicionales del Orquestador
+   * @returns Lista de grupos eliminados pendientes con relaciones pobladas
    */
-  async findDeletedPendingSync(): Promise<GrupoResponseDto[]> {
+  async findDeletedPendingSync(): Promise<any[]> {
     const grupos = await this.grupoRepository.findDeletedUnsynchronized();
-    return grupos.map((g) => this.toResponseDto(g));
+    // Retornar el objeto completo con relaciones anidadas
+    return grupos.map((g) => ({
+      id: g.id,
+      nombre: g.nombre,
+      asignaturaNombreSnapshot: g.asignaturaNombreSnapshot,
+      docenteNombreSnapshot: g.docenteNombreSnapshot,
+      sincronizado: g.sincronizado,
+      moodleCourseId: g.moodleCourseId,
+      deletedAt: g.deletedAt,
+      asignatura: g.asignatura
+        ? {
+            id: g.asignatura.id,
+            nombre: g.asignatura.nombre,
+            cuatrimestre: g.asignatura.cuatrimestre,
+            programaEstudio: g.asignatura.programaEstudio
+              ? {
+                  id: g.asignatura.programaEstudio.id,
+                  nombre: g.asignatura.programaEstudio.nombre,
+                  moodleCategoryId:
+                    g.asignatura.programaEstudio.moodleCategoryId,
+                }
+              : undefined,
+          }
+        : undefined,
+      docente: g.docente
+        ? {
+            id: g.docente.id,
+            nombre: g.docente.nombre,
+            moodleUserId: g.docente.moodleUserId,
+          }
+        : undefined,
+    }));
   }
 }
