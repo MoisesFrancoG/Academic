@@ -30,16 +30,18 @@ export class GrupoResponseDto {
   docenteNombreSnapshot: string;
 
   @ApiProperty({
-    description: 'UUID de la asignatura',
+    description: 'UUID de la asignatura (puede ser null si fue eliminada)',
     example: '660e8400-e29b-41d4-a716-446655440001',
+    nullable: true,
   })
-  asignaturaId: string;
+  asignaturaId: string | null;
 
   @ApiProperty({
-    description: 'UUID del docente',
+    description: 'UUID del docente (puede ser null si fue eliminado)',
     example: '770e8400-e29b-41d4-a716-446655440002',
+    nullable: true,
   })
-  docenteId: string;
+  docenteId: string | null;
 
   @ApiProperty({
     description: 'Fecha de creación del registro',

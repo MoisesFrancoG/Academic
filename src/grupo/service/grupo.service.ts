@@ -332,10 +332,12 @@ export class GrupoService {
     return {
       id: grupo.id,
       nombre: grupo.nombre,
-      asignaturaNombreSnapshot: grupo.asignaturaNombreSnapshot,
-      docenteNombreSnapshot: grupo.docenteNombreSnapshot,
-      asignaturaId: grupo.asignatura.id,
-      docenteId: grupo.docente.id,
+      asignaturaNombreSnapshot:
+        grupo.asignatura?.nombre || grupo.asignaturaNombreSnapshot,
+      docenteNombreSnapshot:
+        grupo.docente?.nombre || grupo.docenteNombreSnapshot,
+      asignaturaId: grupo.asignatura?.id || null,
+      docenteId: grupo.docente?.id || null,
       createdAt: grupo.createdAt,
       updatedAt: grupo.updatedAt,
     };
