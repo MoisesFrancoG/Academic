@@ -8,8 +8,6 @@ import {
 import { Alumno } from '../entities/alumno.entity';
 import { CreateAlumnoDto, UpdateAlumnoDto } from '../DTOs';
 import type { IAlumnoRepository } from '../repository/alumno.repository.interface';
-import { Repository } from 'typeorm';
-import { InscripcionGrupo } from '../../inscripciones-grupo/entities/inscripcion-grupo.entity';
 
 /**
  * Servicio de lógica de negocio para Alumno
@@ -22,8 +20,6 @@ export class AlumnoService {
   constructor(
     @Inject('IAlumnoRepository')
     private readonly alumnoRepository: IAlumnoRepository,
-    @Inject('INSCRIPCION_GRUPO_REPOSITORY')
-    private readonly inscripcionRepository: Repository<InscripcionGrupo>,
   ) {}
 
   /**
@@ -144,28 +140,16 @@ export class AlumnoService {
    */
   /**
    * Elimina lógicamente un alumno (Soft Delete)
-   * CASCADA: También elimina todas las inscripciones del alumno
+   * CASCADA: También elimina todas las inscripciones del alumno (manejado en el repositorio)
    * @param id - ID del alumno
    * @throws NotFoundException si no se encuentra el alumno
    */
   async remove(id: string): Promise<void> {
     await this.findOne(id); // Verifica que existe
 
-    // 1. Soft Delete del Alumno
-    const result = await this.alumnoRepository.softDelete(id);
-
-    if (result) {
-      // 2. INTEGRIDAD: Soft Delete en cascada de las inscripciones de este alumno
-      await this.inscripcionRepository.softDelete({ alumnoId: id });
-
-      // 3. Marcar inscripciones como no sincronizadas
-      // Para que el Orquestador detecte que debe desmatricular en Moodle
-      await this.inscripcionRepository.update(
-        { alumnoId: id },
-        { sincronizado: false },
-      );
-
-      // Nota: El alumno ya se marcó como sincronizado=false en softDelete()
+    const deleted = await this.alumnoRepository.softDelete(id);
+    if (!deleted) {
+      throw new NotFoundException(`No se pudo eliminar el alumno con ID ${id}`);
     }
   }
 

@@ -4,6 +4,7 @@ import { Alumno } from '../entities/alumno.entity';
 import { IAlumnoRepository } from './alumno.repository.interface';
 import { CreateAlumnoDto } from '../DTOs/create-alumno.dto';
 import { UpdateAlumnoDto } from '../DTOs/update-alumno.dto';
+import { InscripcionGrupo } from '../../inscripciones-grupo/entities/inscripcion-grupo.entity';
 
 /**
  * Implementación concreta del repositorio de Alumno usando TypeORM
@@ -14,6 +15,8 @@ export class AlumnoRepository implements IAlumnoRepository {
   constructor(
     @Inject('ALUMNO_REPOSITORY')
     private readonly repository: Repository<Alumno>,
+    @Inject('INSCRIPCION_GRUPO_REPOSITORY')
+    private readonly inscripcionRepository: Repository<InscripcionGrupo>,
   ) {}
 
   async create(createDto: CreateAlumnoDto): Promise<Alumno> {
@@ -79,15 +82,27 @@ export class AlumnoRepository implements IAlumnoRepository {
   }
 
   async softDelete(id: string): Promise<boolean> {
-    // Soft delete: marca deletedAt
+    // 1. Soft Delete del Alumno
     const result = await this.repository.softDelete(id);
-
+    
     if (result.affected && result.affected > 0) {
-      // Marcar sincronizado = false para que el Orquestador procese la baja
+      // 2. INTEGRIDAD: Soft Delete en cascada de las inscripciones de este alumno
+      await this.inscripcionRepository.softDelete({ alumnoId: id });
+      
+      // 3. Marcar inscripciones como no sincronizadas
+      // Para que el Orquestador detecte que debe desmatricular en Moodle
+      await this.inscripcionRepository.update(
+        { alumnoId: id },
+        { sincronizado: false },
+      );
+      
+      // 4. Marcar Alumno como no sincronizado
+      // Para que el Orquestador detecte que debe eliminar el usuario de Moodle
       await this.repository.update(id, { sincronizado: false });
+      
       return true;
     }
-
+    
     return false;
   }
 
