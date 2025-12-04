@@ -147,20 +147,25 @@ export class ProgramaEstudioService {
   /**
    * Confirma la sincronización exitosa con Moodle
    * Actualiza el moodleCategoryId y marca sincronizado = true
-   * @param id - ID del programa de estudio
+   * @param id - ID del programa
    * @param moodleCategoryId - ID de la categoría en Moodle
    * @throws NotFoundException si no se encuentra el programa
+   * IMPORTANTE: Usa save() directo para evitar que el Dirty Flag resetee sincronizado a false
    */
   async confirmMoodleSync(
     id: string,
     moodleCategoryId: number,
   ): Promise<ProgramaEstudio> {
-    await this.findOne(id); // Verifica que existe
+    const programa = await this.findOne(id); // Verifica que existe
 
-    return await this.programaEstudioRepository.update(id, {
-      moodleCategoryId,
-      sincronizado: true,
-    } as Partial<ProgramaEstudio>);
+    // Actualizar campos manualmente y guardar directamente
+    // Esto evita pasar por repository.update() que fuerza sincronizado = false
+    programa.moodleCategoryId = moodleCategoryId;
+    programa.sincronizado = true;
+
+    // Save directo en el repositorio TypeORM (bypass del método update personalizado)
+    const updated = await this.programaEstudioRepository['repository'].save(programa);
+    return updated;
   }
 
   /**

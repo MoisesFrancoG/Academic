@@ -162,14 +162,19 @@ export class AlumnoService {
    * @param id - ID del alumno
    * @param moodleUserId - ID del usuario en Moodle
    * @throws NotFoundException si no se encuentra el alumno
+   * IMPORTANTE: Usa save() directo para evitar que el Dirty Flag resetee sincronizado a false
    */
   async confirmMoodleSync(id: string, moodleUserId: number): Promise<Alumno> {
-    await this.findOne(id); // Verifica que existe
+    const alumno = await this.findOne(id); // Verifica que existe
 
-    return await this.alumnoRepository.update(id, {
-      moodleUserId,
-      sincronizado: true,
-    } as Partial<Alumno>);
+    // Actualizar campos manualmente y guardar directamente
+    // Esto evita pasar por repository.update() que fuerza sincronizado = false
+    alumno.moodleUserId = moodleUserId;
+    alumno.sincronizado = true;
+
+    // Save directo en el repositorio TypeORM (bypass del método update personalizado)
+    const updated = await this.alumnoRepository['repository'].save(alumno);
+    return updated;
   }
 
   /**

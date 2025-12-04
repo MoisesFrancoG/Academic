@@ -347,6 +347,7 @@ export class GrupoService {
    * @param id - ID del grupo
    * @param moodleCourseId - ID del curso en Moodle
    * @throws NotFoundException si no se encuentra el grupo
+   * IMPORTANTE: Usa save() directo para evitar que el Dirty Flag resetee sincronizado a false
    */
   async confirmMoodleSync(
     id: string,
@@ -361,7 +362,8 @@ export class GrupoService {
     grupo.moodleCourseId = moodleCourseId;
     grupo.sincronizado = true;
 
-    await this.grupoRepository.update(grupo);
+    // Save directo en el repositorio TypeORM (bypass del método update personalizado)
+    await this.grupoRepository['grupoRepository'].save(grupo);
 
     // Recargar con relaciones
     const updatedGrupo = await this.grupoRepository.findById(id);

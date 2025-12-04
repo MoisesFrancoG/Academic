@@ -107,7 +107,18 @@ export class InscripcionGrupoRepository implements IInscripcionGrupoRepository {
     });
   }
 
+  /**
+   * Marca una inscripción como sincronizada después de confirmar en Moodle
+   * IMPORTANTE: Usa save() directo para garantizar que sincronizado = true prevalezca
+   * @param id - ID de la inscripción
+   */
   async markAsSynchronized(id: string): Promise<void> {
-    await this.repository.update(id, { sincronizado: true });
+    const inscripcion = await this.repository.findOne({ where: { id } });
+    if (!inscripcion) {
+      throw new Error(`Inscripción con ID ${id} no encontrada`);
+    }
+    
+    inscripcion.sincronizado = true;
+    await this.repository.save(inscripcion);
   }
 }
