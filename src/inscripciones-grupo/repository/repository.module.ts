@@ -5,6 +5,7 @@ import { InscripcionGrupoRepository } from './inscripcion-grupo.repository';
 
 /**
  * Módulo del repositorio de Inscripciones de Grupo
+ * Exporta tanto el repositorio TypeORM como la implementación personalizada
  */
 @Module({
   imports: [DatabaseModule],
@@ -15,6 +16,9 @@ import { InscripcionGrupoRepository } from './inscripcion-grupo.repository';
       useClass: InscripcionGrupoRepository,
     },
   ],
-  exports: ['IInscripcionGrupoRepository'],
+  exports: [
+    ...inscripcionGrupoProviders, // 🚨 CRÍTICO: Exportar el provider INSCRIPCION_GRUPO_REPOSITORY
+    'IInscripcionGrupoRepository',
+  ],
 })
 export class InscripcionGrupoRepositoryModule {}
