@@ -151,12 +151,21 @@ export class ProgramaEstudioService {
    * @param moodleCategoryId - ID de la categoría en Moodle
    * @throws NotFoundException si no se encuentra el programa
    * IMPORTANTE: Usa save() directo para evitar que el Dirty Flag resetee sincronizado a false
+   * CRÍTICO: Incluye withDeleted para poder confirmar bajas (soft deletes)
    */
   async confirmMoodleSync(
     id: string,
     moodleCategoryId: number,
   ): Promise<ProgramaEstudio> {
-    const programa = await this.findOne(id); // Verifica que existe
+    // CRÍTICO: Agregar 'withDeleted: true' para poder actualizar registros borrados
+    const programa = await this.programaEstudioRepository['repository'].findOne({
+      where: { id },
+      withDeleted: true,
+    });
+
+    if (!programa) {
+      throw new NotFoundException(`Programa de Estudio con ID ${id} no encontrado`);
+    }
 
     // Actualizar campos manualmente y guardar directamente
     // Esto evita pasar por repository.update() que fuerza sincronizado = false

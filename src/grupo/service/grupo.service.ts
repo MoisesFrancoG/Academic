@@ -348,12 +348,18 @@ export class GrupoService {
    * @param moodleCourseId - ID del curso en Moodle
    * @throws NotFoundException si no se encuentra el grupo
    * IMPORTANTE: Usa save() directo para evitar que el Dirty Flag resetee sincronizado a false
+   * CRÍTICO: Incluye withDeleted para poder confirmar bajas (soft deletes)
    */
   async confirmMoodleSync(
     id: string,
     moodleCourseId: number,
   ): Promise<GrupoResponseDto> {
-    const grupo = await this.grupoRepository.findById(id);
+    // CRÍTICO: Agregar 'withDeleted: true' para poder actualizar registros borrados
+    const grupo = await this.grupoRepository['grupoRepository'].findOne({
+      where: { id },
+      withDeleted: true,
+    });
+
     if (!grupo) {
       throw new NotFoundException(`Grupo con ID ${id} no encontrado`);
     }
@@ -365,8 +371,13 @@ export class GrupoService {
     // Save directo en el repositorio TypeORM (bypass del método update personalizado)
     await this.grupoRepository['grupoRepository'].save(grupo);
 
-    // Recargar con relaciones
-    const updatedGrupo = await this.grupoRepository.findById(id);
+    // Recargar con relaciones (también con withDeleted)
+    const updatedGrupo = await this.grupoRepository['grupoRepository'].findOne({
+      where: { id },
+      relations: ['asignatura', 'docente'],
+      withDeleted: true,
+    });
+
     return this.toResponseDto(updatedGrupo!);
   }
 

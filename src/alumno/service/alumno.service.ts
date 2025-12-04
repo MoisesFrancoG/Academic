@@ -163,9 +163,18 @@ export class AlumnoService {
    * @param moodleUserId - ID del usuario en Moodle
    * @throws NotFoundException si no se encuentra el alumno
    * IMPORTANTE: Usa save() directo para evitar que el Dirty Flag resetee sincronizado a false
+   * CRÍTICO: Incluye withDeleted para poder confirmar bajas (soft deletes)
    */
   async confirmMoodleSync(id: string, moodleUserId: number): Promise<Alumno> {
-    const alumno = await this.findOne(id); // Verifica que existe
+    // CRÍTICO: Agregar 'withDeleted: true' para poder actualizar registros borrados
+    const alumno = await this.alumnoRepository['repository'].findOne({
+      where: { id },
+      withDeleted: true,
+    });
+
+    if (!alumno) {
+      throw new NotFoundException(`Alumno con ID ${id} no encontrado`);
+    }
 
     // Actualizar campos manualmente y guardar directamente
     // Esto evita pasar por repository.update() que fuerza sincronizado = false
