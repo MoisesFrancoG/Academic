@@ -184,7 +184,8 @@ export class GrupoService {
   }
 
   /**
-   * Elimina un grupo
+   * Elimina lógicamente un grupo (Soft Delete)
+   * Marca deletedAt y sincronizado = false para que el Orquestador procese la baja en Moodle
    */
   async delete(id: string): Promise<void> {
     const grupo = await this.grupoRepository.findById(id);
@@ -192,7 +193,7 @@ export class GrupoService {
       throw new NotFoundException(`Grupo con ID ${id} no encontrado`);
     }
 
-    const deleted = await this.grupoRepository.delete(id);
+    const deleted = await this.grupoRepository.softDelete(id);
     if (!deleted) {
       throw new NotFoundException(`No se pudo eliminar el grupo con ID ${id}`);
     }

@@ -59,6 +59,32 @@ export class GrupoRepository implements IGrupoRepository {
     );
   }
 
+  async softDelete(id: string): Promise<boolean> {
+    // 1. Soft Delete del Grupo (Curso)
+    const result = await this.grupoRepository.softDelete(id);
+    
+    if (result.affected && result.affected > 0) {
+      // 2. CASCADA MANUAL: Soft Delete de las inscripciones asociadas
+      // Necesario porque ON DELETE CASCADE de Postgres no se dispara con soft deletes
+      await this.inscripcionRepository.softDelete({ grupoId: id });
+      
+      // 3. Marcar Inscripciones como 'sincronizado: false'
+      // Para que el Orquestador detecte que debe desmatricular a los alumnos en Moodle
+      await this.inscripcionRepository.update(
+        { grupoId: id },
+        { sincronizado: false },
+      );
+      
+      // 4. Marcar Grupo como 'sincronizado: false'
+      // Para que el Orquestador detecte que debe eliminar el curso en Moodle
+      await this.grupoRepository.update(id, { sincronizado: false });
+      
+      return true;
+    }
+    
+    return false;
+  }
+
   async count(): Promise<number> {
     return await this.grupoRepository.count();
   }

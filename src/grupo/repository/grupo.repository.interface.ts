@@ -40,6 +40,14 @@ export interface IGrupoRepository {
   delete(id: string): Promise<boolean>;
 
   /**
+   * Elimina lógicamente un grupo (Soft Delete)
+   * Marca deletedAt y sincronizado = false para que el Orquestador procese la baja
+   * @param id - UUID del grupo
+   * @returns true si se marcó como eliminado
+   */
+  softDelete(id: string): Promise<boolean>;
+
+  /**
    * Cuenta el total de grupos
    * @returns Número total de grupos
    */
