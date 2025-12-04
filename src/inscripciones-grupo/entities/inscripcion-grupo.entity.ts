@@ -66,12 +66,16 @@ export class InscripcionGrupo {
   deletedAt?: Date;
 
   // Relaciones
-  @ManyToOne(() => Grupo, (grupo) => grupo.inscripciones, { nullable: false })
+  @ManyToOne(() => Grupo, (grupo) => grupo.inscripciones, { 
+    nullable: false,
+    onDelete: 'CASCADE', // Borrado en cascada cuando se elimina el Grupo
+  })
   @JoinColumn({ name: 'grupo_id' })
   grupo: Grupo;
 
   @ManyToOne(() => Alumno, (alumno) => alumno.inscripciones, {
     nullable: false,
+    onDelete: 'CASCADE', // Borrado en cascada cuando se elimina el Alumno
   })
   @JoinColumn({ name: 'alumno_id' })
   alumno: Alumno;
