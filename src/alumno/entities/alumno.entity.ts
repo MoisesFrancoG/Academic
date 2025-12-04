@@ -4,9 +4,10 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
-  ManyToMany,
+  DeleteDateColumn,
+  OneToMany,
 } from 'typeorm';
-import { Grupo } from '../../grupo/entities/grupo.entity';
+import { InscripcionGrupo } from '../../inscripciones-grupo/entities/inscripcion-grupo.entity';
 
 /**
  * Entidad que representa un Alumno (Estudiante)
@@ -59,7 +60,31 @@ export class Alumno {
   })
   updatedAt: Date;
 
-  // Relaciones
-  @ManyToMany(() => Grupo, (grupo) => grupo.alumnos)
-  grupos: Grupo[];
+  @Column({
+    type: 'boolean',
+    default: false,
+    comment:
+      'Bandera de sincronización con Moodle. false = pendiente de sincronizar',
+  })
+  sincronizado: boolean;
+
+  @Column({
+    type: 'int',
+    nullable: true,
+    name: 'moodle_user_id',
+    comment: 'ID del usuario en Moodle',
+  })
+  moodleUserId: number | null;
+
+  @DeleteDateColumn({
+    name: 'deleted_at',
+    select: false,
+    comment:
+      'Fecha de eliminación lógica (Soft Delete). Usado para eliminar en Moodle',
+  })
+  deletedAt?: Date;
+
+  // Relación OneToMany con inscripciones (reemplaza ManyToMany)
+  @OneToMany(() => InscripcionGrupo, (inscripcion) => inscripcion.alumno)
+  inscripciones: InscripcionGrupo[];
 }

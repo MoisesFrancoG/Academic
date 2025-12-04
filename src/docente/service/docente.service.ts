@@ -115,13 +115,19 @@ export class DocenteService {
   }
 
   /**
-   * Elimina un docente
+   * Elimina un docente (Soft Delete con Regla B)
+   * Marca deletedAt y sincronizado = false para notificar al Orquestador
    * @param id - ID del docente a eliminar
    * @throws NotFoundException si no se encuentra el docente
    */
   async remove(id: string): Promise<void> {
     await this.findOne(id); // Verifica que existe
-    await this.docenteRepository.delete(id);
+
+    // Regla B: Soft Delete Manual - usar update con deletedAt
+    await this.docenteRepository.update(id, {
+      deletedAt: new Date(),
+      sincronizado: false,
+    } as Partial<Docente>);
   }
 
   /**

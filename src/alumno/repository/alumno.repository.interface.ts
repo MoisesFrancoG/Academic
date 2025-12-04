@@ -35,8 +35,12 @@ export interface IAlumnoRepository {
 
   /**
    * Actualiza un alumno existente
+   * Marca automáticamente sincronizado = false
    */
-  update(id: string, updateDto: UpdateAlumnoDto): Promise<Alumno>;
+  update(
+    id: string,
+    updateDto: UpdateAlumnoDto | Partial<Alumno>,
+  ): Promise<Alumno>;
 
   /**
    * Elimina un alumno

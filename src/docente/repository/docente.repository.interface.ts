@@ -35,8 +35,12 @@ export interface IDocenteRepository {
 
   /**
    * Actualiza un docente existente
+   * Marca automáticamente sincronizado = false
    */
-  update(id: string, updateDto: UpdateDocenteDto): Promise<Docente>;
+  update(
+    id: string,
+    updateDto: UpdateDocenteDto | Partial<Docente>,
+  ): Promise<Docente>;
 
   /**
    * Elimina un docente

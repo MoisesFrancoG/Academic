@@ -4,6 +4,7 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
   ManyToMany,
   JoinTable,
   OneToMany,
@@ -44,6 +45,30 @@ export class Docente {
     name: 'updated_at',
   })
   updatedAt: Date;
+
+  @Column({
+    type: 'boolean',
+    default: false,
+    comment:
+      'Bandera de sincronización con Moodle. false = pendiente de sincronizar',
+  })
+  sincronizado: boolean;
+
+  @Column({
+    type: 'int',
+    nullable: true,
+    name: 'moodle_user_id',
+    comment: 'ID del usuario en Moodle',
+  })
+  moodleUserId: number | null;
+
+  @DeleteDateColumn({
+    name: 'deleted_at',
+    select: false,
+    comment:
+      'Fecha de eliminación lógica (Soft Delete). Usado para eliminar en Moodle',
+  })
+  deletedAt?: Date;
 
   // Relaciones
   /**

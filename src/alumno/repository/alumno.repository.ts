@@ -46,8 +46,27 @@ export class AlumnoRepository implements IAlumnoRepository {
     });
   }
 
-  async update(id: string, updateDto: UpdateAlumnoDto): Promise<Alumno> {
-    await this.repository.update(id, updateDto);
+  async update(
+    id: string,
+    updateDto: UpdateAlumnoDto | Partial<Alumno>,
+  ): Promise<Alumno> {
+    // Si recibimos una entidad parcial con deletedAt, hacer un save directo
+    if ('deletedAt' in updateDto) {
+      const entity = await this.repository.preload({
+        id,
+        ...updateDto,
+      });
+      if (!entity) {
+        throw new Error(`Alumno con ID ${id} no encontrado`);
+      }
+      return await this.repository.save(entity);
+    }
+
+    // Para actualizaciones normales, marcar como no sincronizado
+    await this.repository.update(id, {
+      ...updateDto,
+      sincronizado: false,
+    });
     const updated = await this.findById(id);
     if (!updated) {
       throw new Error(`Alumno con ID ${id} no encontrado`);

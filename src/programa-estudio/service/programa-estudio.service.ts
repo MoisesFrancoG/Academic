@@ -110,13 +110,19 @@ export class ProgramaEstudioService {
   }
 
   /**
-   * Elimina un programa de estudio
+   * Elimina un programa de estudio (Soft Delete con Regla B)
+   * Marca deletedAt y sincronizado = false para notificar al Orquestador
    * @param id - ID del programa a eliminar
    * @throws NotFoundException si no se encuentra el programa
    */
   async remove(id: string): Promise<void> {
     await this.findOne(id); // Verifica que existe
-    await this.programaEstudioRepository.delete(id);
+
+    // Regla B: Soft Delete Manual - usar update con deletedAt
+    await this.programaEstudioRepository.update(id, {
+      deletedAt: new Date(),
+      sincronizado: false,
+    } as Partial<ProgramaEstudio>);
   }
 
   /**

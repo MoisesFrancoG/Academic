@@ -103,6 +103,7 @@ export class AlumnoService {
 
   /**
    * Actualiza un alumno existente
+   * Marca automáticamente sincronizado = false (Regla A)
    * @param id - ID del alumno a actualizar
    * @param updateDto - Datos a actualizar
    * @returns Alumno actualizado
@@ -127,17 +128,24 @@ export class AlumnoService {
       }
     }
 
+    // Regla A: El repositorio marca automáticamente sincronizado = false
     return await this.alumnoRepository.update(id, updateDto);
   }
 
   /**
-   * Elimina un alumno
+   * Elimina un alumno (Soft Delete con Regla B)
+   * Marca deletedAt y sincronizado = false para notificar al Orquestador
    * @param id - ID del alumno a eliminar
    * @throws NotFoundException si no se encuentra el alumno
    */
   async remove(id: string): Promise<void> {
     await this.findOne(id); // Verifica que existe
-    await this.alumnoRepository.delete(id);
+
+    // Regla B: Soft Delete Manual - usar update con deletedAt
+    await this.alumnoRepository.update(id, {
+      deletedAt: new Date(),
+      sincronizado: false,
+    } as Partial<Alumno>);
   }
 
   /**

@@ -2,18 +2,19 @@ import { Injectable, Inject } from '@nestjs/common';
 import { Repository, In } from 'typeorm';
 import type { IGrupoRepository } from './grupo.repository.interface';
 import { Grupo } from '../entities/grupo.entity';
-import { Alumno } from '../../alumno/entities/alumno.entity';
+import { InscripcionGrupo } from '../../inscripciones-grupo/entities/inscripcion-grupo.entity';
 
 /**
  * Implementación del repositorio de Grupo usando TypeORM
+ * Ahora usa InscripcionGrupo para manejar la relación con alumnos
  */
 @Injectable()
 export class GrupoRepository implements IGrupoRepository {
   constructor(
     @Inject('GRUPO_REPOSITORY')
     private readonly grupoRepository: Repository<Grupo>,
-    @Inject('ALUMNO_REPOSITORY')
-    private readonly alumnoRepository: Repository<Alumno>,
+    @Inject('INSCRIPCION_GRUPO_REPOSITORY')
+    private readonly inscripcionRepository: Repository<InscripcionGrupo>,
   ) {}
 
   async create(grupo: Grupo): Promise<Grupo> {
@@ -27,7 +28,8 @@ export class GrupoRepository implements IGrupoRepository {
         'asignatura',
         'asignatura.programaEstudio',
         'docente',
-        'alumnos',
+        'inscripciones',
+        'inscripciones.alumno',
       ],
     });
   }
@@ -38,7 +40,8 @@ export class GrupoRepository implements IGrupoRepository {
         'asignatura',
         'asignatura.programaEstudio',
         'docente',
-        'alumnos',
+        'inscripciones',
+        'inscripciones.alumno',
       ],
     });
   }
@@ -67,7 +70,8 @@ export class GrupoRepository implements IGrupoRepository {
         'asignatura',
         'asignatura.programaEstudio',
         'docente',
-        'alumnos',
+        'inscripciones',
+        'inscripciones.alumno',
       ],
     });
   }
@@ -79,7 +83,8 @@ export class GrupoRepository implements IGrupoRepository {
         'asignatura',
         'asignatura.programaEstudio',
         'docente',
-        'alumnos',
+        'inscripciones',
+        'inscripciones.alumno',
       ],
     });
   }
@@ -90,87 +95,93 @@ export class GrupoRepository implements IGrupoRepository {
       .leftJoinAndSelect('grupo.asignatura', 'asignatura')
       .leftJoinAndSelect('asignatura.programaEstudio', 'programaEstudio')
       .leftJoinAndSelect('grupo.docente', 'docente')
-      .leftJoinAndSelect('grupo.alumnos', 'alumnos')
-      .where('alumnos.id = :alumnoId', { alumnoId })
+      .leftJoinAndSelect('grupo.inscripciones', 'inscripciones')
+      .leftJoinAndSelect('inscripciones.alumno', 'alumno')
+      .where('alumno.id = :alumnoId', { alumnoId })
       .getMany();
   }
 
   async addAlumno(grupoId: string, alumnoId: string): Promise<Grupo> {
-    const grupo = await this.grupoRepository.findOne({
-      where: { id: grupoId },
-      relations: ['asignatura', 'docente', 'alumnos'],
+    // Verificar si ya existe una inscripción
+    const existente = await this.inscripcionRepository.findOne({
+      where: { grupoId, alumnoId },
     });
 
-    if (!grupo) {
-      throw new Error('Grupo no encontrado');
-    }
-
-    const alumno = await this.alumnoRepository.findOne({
-      where: { id: alumnoId },
-    });
-
-    if (!alumno) {
-      throw new Error('Alumno no encontrado');
-    }
-
-    // Verificar si el alumno ya está inscrito
-    const alreadyEnrolled = grupo.alumnos?.some((a) => a.id === alumnoId);
-    if (!alreadyEnrolled) {
-      grupo.alumnos = [...(grupo.alumnos || []), alumno];
-      await this.grupoRepository.save(grupo);
+    if (!existente) {
+      // Crear nueva inscripción
+      const inscripcion = this.inscripcionRepository.create({
+        grupoId,
+        alumnoId,
+        sincronizado: false,
+      });
+      await this.inscripcionRepository.save(inscripcion);
     }
 
     return (await this.findById(grupoId)) as Grupo;
   }
 
   async removeAlumno(grupoId: string, alumnoId: string): Promise<Grupo> {
-    const grupo = await this.grupoRepository.findOne({
-      where: { id: grupoId },
-      relations: ['asignatura', 'docente', 'alumnos'],
+    // Buscar la inscripción
+    const inscripcion = await this.inscripcionRepository.findOne({
+      where: { grupoId, alumnoId },
     });
 
-    if (!grupo) {
-      throw new Error('Grupo no encontrado');
+    if (inscripcion) {
+      // Soft Delete: marcar deletedAt y bajar bandera
+      inscripcion.deletedAt = new Date();
+      inscripcion.sincronizado = false;
+      await this.inscripcionRepository.save(inscripcion);
     }
-
-    grupo.alumnos = grupo.alumnos?.filter((a) => a.id !== alumnoId) || [];
-    await this.grupoRepository.save(grupo);
 
     return (await this.findById(grupoId)) as Grupo;
   }
 
   async updateAlumnos(grupoId: string, alumnoIds: string[]): Promise<Grupo> {
-    const grupo = await this.grupoRepository.findOne({
-      where: { id: grupoId },
-      relations: ['asignatura', 'docente', 'alumnos'],
+    // Obtener inscripciones actuales del grupo
+    const inscripcionesActuales = await this.inscripcionRepository.find({
+      where: { grupoId },
     });
 
-    if (!grupo) {
-      throw new Error('Grupo no encontrado');
+    const alumnosActualesIds = inscripcionesActuales.map((i) => i.alumnoId);
+
+    // Alumnos a agregar (están en alumnoIds pero no en actuales)
+    const alumnosAgregar = alumnoIds.filter(
+      (id) => !alumnosActualesIds.includes(id),
+    );
+
+    // Alumnos a remover (están en actuales pero no en alumnoIds)
+    const alumnosRemover = alumnosActualesIds.filter(
+      (id) => !alumnoIds.includes(id),
+    );
+
+    // Agregar nuevas inscripciones
+    for (const alumnoId of alumnosAgregar) {
+      const inscripcion = this.inscripcionRepository.create({
+        grupoId,
+        alumnoId,
+        sincronizado: false,
+      });
+      await this.inscripcionRepository.save(inscripcion);
     }
 
-    // Buscar todos los alumnos por sus IDs
-    const alumnos = await this.alumnoRepository.find({
-      where: { id: In(alumnoIds) },
-    });
-
-    // Verificar que todos los alumnos existen
-    if (alumnos.length !== alumnoIds.length) {
-      throw new Error('Uno o más alumnos no fueron encontrados');
+    // Soft delete de inscripciones removidas
+    for (const alumnoId of alumnosRemover) {
+      const inscripcion = inscripcionesActuales.find(
+        (i) => i.alumnoId === alumnoId,
+      );
+      if (inscripcion) {
+        inscripcion.deletedAt = new Date();
+        inscripcion.sincronizado = false;
+        await this.inscripcionRepository.save(inscripcion);
+      }
     }
-
-    grupo.alumnos = alumnos;
-    await this.grupoRepository.save(grupo);
 
     return (await this.findById(grupoId)) as Grupo;
   }
 
   async countAlumnos(grupoId: string): Promise<number> {
-    const grupo = await this.grupoRepository.findOne({
-      where: { id: grupoId },
-      relations: ['alumnos'],
+    return await this.inscripcionRepository.count({
+      where: { grupoId },
     });
-
-    return grupo?.alumnos?.length || 0;
   }
 }

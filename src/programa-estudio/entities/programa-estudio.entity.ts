@@ -4,6 +4,7 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
   OneToMany,
 } from 'typeorm';
 import { Asignatura } from '../../asignatura/entities/asignatura.entity';
@@ -52,6 +53,30 @@ export class ProgramaEstudio {
     comment: 'Fecha de última actualización del registro',
   })
   updatedAt: Date;
+
+  @Column({
+    type: 'boolean',
+    default: false,
+    comment:
+      'Bandera de sincronización con Moodle. false = pendiente de sincronizar',
+  })
+  sincronizado: boolean;
+
+  @Column({
+    type: 'int',
+    nullable: true,
+    name: 'moodle_category_id',
+    comment: 'ID de la categoría en Moodle',
+  })
+  moodleCategoryId: number | null;
+
+  @DeleteDateColumn({
+    name: 'deleted_at',
+    select: false,
+    comment:
+      'Fecha de eliminación lógica (Soft Delete). Usado para eliminar en Moodle',
+  })
+  deletedAt?: Date;
 
   // Relaciones
   @OneToMany(() => Asignatura, (asignatura) => asignatura.programaEstudio)

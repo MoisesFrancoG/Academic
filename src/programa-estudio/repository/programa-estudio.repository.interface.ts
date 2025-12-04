@@ -29,11 +29,12 @@ export interface IProgramaEstudioRepository {
   findByNombre(nombre: string): Promise<ProgramaEstudio | null>;
 
   /**
-   * Actualiza un programa de estudio existente
+   * Actualiza un programa de estudio
+   * Marca automáticamente sincronizado = false
    */
   update(
     id: string,
-    updateDto: UpdateProgramaEstudioDto,
+    updateDto: UpdateProgramaEstudioDto | Partial<ProgramaEstudio>,
   ): Promise<ProgramaEstudio>;
 
   /**

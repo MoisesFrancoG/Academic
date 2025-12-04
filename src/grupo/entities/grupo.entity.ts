@@ -4,16 +4,16 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
   ManyToOne,
-  ManyToMany,
+  OneToMany,
   JoinColumn,
-  JoinTable,
   BeforeInsert,
   BeforeUpdate,
 } from 'typeorm';
 import { Asignatura } from '../../asignatura/entities/asignatura.entity';
 import { Docente } from '../../docente/entities/docente.entity';
-import { Alumno } from '../../alumno/entities/alumno.entity';
+import { InscripcionGrupo } from '../../inscripciones-grupo/entities/inscripcion-grupo.entity';
 
 /**
  * Entidad que representa un Grupo
@@ -92,19 +92,33 @@ export class Grupo {
   @JoinColumn({ name: 'docente_id' })
   docente: Docente;
 
-  @ManyToMany(() => Alumno)
-  @JoinTable({
-    name: 'inscripciones_grupo',
-    joinColumn: {
-      name: 'grupo_id',
-      referencedColumnName: 'id',
-    },
-    inverseJoinColumn: {
-      name: 'alumno_id',
-      referencedColumnName: 'id',
-    },
+  @Column({
+    type: 'boolean',
+    default: false,
+    comment:
+      'Bandera de sincronización con Moodle. false = pendiente de sincronizar',
   })
-  alumnos: Alumno[];
+  sincronizado: boolean;
+
+  @Column({
+    type: 'int',
+    nullable: true,
+    name: 'moodle_course_id',
+    comment: 'ID del curso en Moodle',
+  })
+  moodleCourseId: number | null;
+
+  @DeleteDateColumn({
+    name: 'deleted_at',
+    select: false,
+    comment:
+      'Fecha de eliminación lógica (Soft Delete). Usado para eliminar en Moodle',
+  })
+  deletedAt?: Date;
+
+  // Relación OneToMany con inscripciones (reemplaza ManyToMany)
+  @OneToMany(() => InscripcionGrupo, (inscripcion) => inscripcion.grupo)
+  inscripciones: InscripcionGrupo[];
 
   // Hooks para mantener los snapshots actualizados
   @BeforeInsert()

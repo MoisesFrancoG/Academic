@@ -70,19 +70,37 @@ export class DocenteRepository implements IDocenteRepository {
       .getMany();
   }
 
-  async update(id: string, updateDto: UpdateDocenteDto): Promise<Docente> {
+  async update(
+    id: string,
+    updateDto: UpdateDocenteDto | Partial<Docente>,
+  ): Promise<Docente> {
+    // Si recibimos una entidad parcial con deletedAt, hacer un save directo
+    if ('deletedAt' in updateDto) {
+      const entity = await this.repository.preload({
+        id,
+        ...updateDto,
+      });
+      if (!entity) {
+        throw new Error(`Docente con ID ${id} no encontrado`);
+      }
+      return await this.repository.save(entity);
+    }
+
     const docente = await this.findById(id);
     if (!docente) {
       throw new Error(`Docente con ID ${id} no encontrado`);
     }
 
     // Actualizar campos básicos
-    if (updateDto.nombre) {
+    if ('nombre' in updateDto && updateDto.nombre) {
       docente.nombre = updateDto.nombre;
     }
 
-    // Actualizar competencias si se proporcionan
-    if (updateDto.asignaturasCompetenciaIds !== undefined) {
+    // Actualizar competencias si se proporcionan (solo si es UpdateDocenteDto)
+    if (
+      'asignaturasCompetenciaIds' in updateDto &&
+      updateDto.asignaturasCompetenciaIds !== undefined
+    ) {
       if (updateDto.asignaturasCompetenciaIds.length > 0) {
         const asignaturas = await this.asignaturaRepository.find({
           where: { id: In(updateDto.asignaturasCompetenciaIds) },
@@ -93,6 +111,8 @@ export class DocenteRepository implements IDocenteRepository {
       }
     }
 
+    // Regla A: Marcar como no sincronizado al actualizar
+    docente.sincronizado = false;
     return await this.repository.save(docente);
   }
 

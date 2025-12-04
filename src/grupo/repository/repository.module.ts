@@ -2,18 +2,18 @@ import { Module } from '@nestjs/common';
 import { DatabaseModule } from '../../database/database.module';
 import { grupoProviders } from './grupo.providers';
 import { GrupoRepository } from './grupo.repository';
-import { alumnoProviders } from '../../alumno/repository/alumno.providers';
+import { inscripcionGrupoProviders } from '../../inscripciones-grupo/repository/inscripcion-grupo.providers';
 
 @Module({
   imports: [DatabaseModule],
   providers: [
     ...grupoProviders,
-    ...alumnoProviders,
+    ...inscripcionGrupoProviders,
     {
       provide: 'IGrupoRepository',
       useClass: GrupoRepository,
     },
   ],
-  exports: ['IGrupoRepository'],
+  exports: ['IGrupoRepository', ...grupoProviders],
 })
 export class GrupoRepositoryModule {}

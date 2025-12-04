@@ -41,14 +41,33 @@ export class ProgramaEstudioRepository implements IProgramaEstudioRepository {
 
   async update(
     id: string,
-    updateDto: UpdateProgramaEstudioDto,
+    updateDto: UpdateProgramaEstudioDto | Partial<ProgramaEstudio>,
   ): Promise<ProgramaEstudio> {
-    await this.repository.update(id, updateDto);
-    const updated = await this.findById(id);
-    if (!updated) {
+    // Si recibimos una entidad parcial con deletedAt, hacer un save directo
+    if ('deletedAt' in updateDto) {
+      const entity = await this.repository.preload({
+        id,
+        ...updateDto,
+      });
+      if (!entity) {
+        throw new Error(`Programa de estudio con ID ${id} no encontrado`);
+      }
+      return await this.repository.save(entity);
+    }
+
+    // Para actualizaciones normales, cargar entidad y actualizar
+    const programa = await this.findById(id);
+    if (!programa) {
       throw new Error(`Programa de estudio con ID ${id} no encontrado`);
     }
-    return updated;
+
+    // Aplicar cambios
+    Object.assign(programa, updateDto);
+
+    // Regla A: Marcar como no sincronizado
+    programa.sincronizado = false;
+
+    return await this.repository.save(programa);
   }
 
   async delete(id: string): Promise<void> {

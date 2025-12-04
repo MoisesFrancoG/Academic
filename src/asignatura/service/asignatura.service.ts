@@ -9,6 +9,9 @@ import { Asignatura } from '../entities/asignatura.entity';
 import { CreateAsignaturaDto, UpdateAsignaturaDto } from '../DTOs';
 import type { IAsignaturaRepository } from '../repository/asignatura.repository.interface';
 import type { IProgramaEstudioRepository } from '../../programa-estudio/repository/programa-estudio.repository.interface';
+import type { IGrupoRepository } from '../../grupo/repository/grupo.repository.interface';
+import { Repository } from 'typeorm';
+import { Grupo } from '../../grupo/entities/grupo.entity';
 
 /**
  * Servicio de lógica de negocio para Asignatura
@@ -23,6 +26,10 @@ export class AsignaturaService {
     private readonly asignaturaRepository: IAsignaturaRepository,
     @Inject('IProgramaEstudioRepository')
     private readonly programaEstudioRepository: IProgramaEstudioRepository,
+    @Inject('IGrupoRepository')
+    private readonly grupoRepository: IGrupoRepository,
+    @Inject('GRUPO_REPOSITORY')
+    private readonly grupoRepo: Repository<Grupo>,
   ) {}
 
   /**
@@ -143,6 +150,15 @@ export class AsignaturaService {
    * @throws NotFoundException si no se encuentra la asignatura o el programa
    * @throws BadRequestException si el cuatrimestre excede el límite
    */
+  /**
+   * Actualiza una asignatura existente
+   * Regla C: Si cambia el nombre, invalida la sincronización de los Grupos relacionados
+   * @param id - ID de la asignatura a actualizar
+   * @param updateDto - Datos a actualizar
+   * @returns Asignatura actualizada
+   * @throws NotFoundException si no se encuentra la asignatura o el programa
+   * @throws BadRequestException si el cuatrimestre excede el límite
+   */
   async update(
     id: string,
     updateDto: UpdateAsignaturaDto,
@@ -185,7 +201,18 @@ export class AsignaturaService {
       }
     }
 
-    return await this.asignaturaRepository.update(id, updateDto);
+    // Actualizar la asignatura
+    const updated = await this.asignaturaRepository.update(id, updateDto);
+
+    // Regla C: Si cambió el nombre, marcar grupos hijos como no sincronizados
+    if (updateDto.nombre && updateDto.nombre !== asignatura.nombre) {
+      await this.grupoRepo.update(
+        { asignatura: { id: id } },
+        { sincronizado: false },
+      );
+    }
+
+    return updated;
   }
 
   /**
