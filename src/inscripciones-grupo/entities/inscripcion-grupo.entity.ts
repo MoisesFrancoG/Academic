@@ -66,7 +66,7 @@ export class InscripcionGrupo {
   deletedAt?: Date;
 
   // Relaciones
-  @ManyToOne(() => Grupo, (grupo) => grupo.inscripciones, { 
+  @ManyToOne(() => Grupo, (grupo) => grupo.inscripciones, {
     nullable: false,
     onDelete: 'CASCADE', // Borrado en cascada cuando se elimina el Grupo
   })

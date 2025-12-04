@@ -122,7 +122,8 @@ export class InscripcionGrupoController {
   @Get('sync/pending')
   @ApiOperation({
     summary: 'Obtener inscripciones pendientes de sincronización',
-    description: 'Endpoint para el Orquestador - Retorna inscripciones con sincronizado=false y deletedAt=null',
+    description:
+      'Endpoint para el Orquestador - Retorna inscripciones con sincronizado=false y deletedAt=null',
   })
   @ApiResponse({
     status: 200,
@@ -140,7 +141,8 @@ export class InscripcionGrupoController {
   @Get('sync/deleted')
   @ApiOperation({
     summary: 'Obtener inscripciones eliminadas pendientes de sincronización',
-    description: 'Endpoint para el Orquestador - Retorna inscripciones con sincronizado=false y deletedAt NOT NULL',
+    description:
+      'Endpoint para el Orquestador - Retorna inscripciones con sincronizado=false y deletedAt NOT NULL',
   })
   @ApiResponse({
     status: 200,
@@ -159,7 +161,10 @@ export class InscripcionGrupoController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Desinscribir alumno de grupo (Soft Delete)' })
   @ApiParam({ name: 'id', description: 'UUID de la inscripción' })
-  @ApiResponse({ status: 204, description: 'Inscripción eliminada exitosamente' })
+  @ApiResponse({
+    status: 204,
+    description: 'Inscripción eliminada exitosamente',
+  })
   @ApiResponse({ status: 404, description: 'Inscripción no encontrada' })
   async remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     await this.inscripcionGrupoService.remove(id);
@@ -173,10 +178,14 @@ export class InscripcionGrupoController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Confirmar sincronización de inscripción',
-    description: 'Endpoint para el Orquestador - Marca sincronizado=true después de procesar en Moodle',
+    description:
+      'Endpoint para el Orquestador - Marca sincronizado=true después de procesar en Moodle',
   })
   @ApiParam({ name: 'id', description: 'UUID de la inscripción' })
-  @ApiResponse({ status: 204, description: 'Inscripción marcada como sincronizada' })
+  @ApiResponse({
+    status: 204,
+    description: 'Inscripción marcada como sincronizada',
+  })
   @ApiResponse({ status: 404, description: 'Inscripción no encontrada' })
   async markAsSynchronized(
     @Param('id', ParseUUIDPipe) id: string,

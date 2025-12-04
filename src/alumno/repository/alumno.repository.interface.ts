@@ -48,6 +48,14 @@ export interface IAlumnoRepository {
   delete(id: string): Promise<void>;
 
   /**
+   * Elimina lógicamente un alumno (Soft Delete)
+   * Marca deletedAt y sincronizado = false para que el Orquestador procese la baja
+   * @param id - UUID del alumno
+   * @returns true si se marcó como eliminado
+   */
+  softDelete(id: string): Promise<boolean>;
+
+  /**
    * Cuenta el total de alumnos
    */
   count(): Promise<number>;

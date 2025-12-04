@@ -78,6 +78,19 @@ export class AlumnoRepository implements IAlumnoRepository {
     await this.repository.delete(id);
   }
 
+  async softDelete(id: string): Promise<boolean> {
+    // Soft delete: marca deletedAt
+    const result = await this.repository.softDelete(id);
+
+    if (result.affected && result.affected > 0) {
+      // Marcar sincronizado = false para que el Orquestador procese la baja
+      await this.repository.update(id, { sincronizado: false });
+      return true;
+    }
+
+    return false;
+  }
+
   async count(): Promise<number> {
     return await this.repository.count();
   }
