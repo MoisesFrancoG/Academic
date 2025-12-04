@@ -196,4 +196,28 @@ export class DocenteRepository implements IDocenteRepository {
 
     await this.repository.save(docente);
   }
+
+  async findUnsynchronized(): Promise<Docente[]> {
+    return await this.repository.find({
+      where: {
+        sincronizado: false,
+        deletedAt: null as any,
+      },
+      relations: ['asignaturasCompetencia'],
+      order: { createdAt: 'ASC' },
+    });
+  }
+
+  async findDeletedUnsynchronized(): Promise<Docente[]> {
+    return await this.repository
+      .find({
+        where: {
+          sincronizado: false,
+        },
+        relations: ['asignaturasCompetencia'],
+        withDeleted: true,
+        order: { deletedAt: 'ASC' },
+      })
+      .then((all) => all.filter((d) => d.deletedAt !== null));
+  }
 }

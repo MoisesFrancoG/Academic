@@ -340,4 +340,51 @@ export class GrupoService {
       updatedAt: grupo.updatedAt,
     };
   }
+
+  /**
+   * Confirma la sincronización exitosa con Moodle
+   * Actualiza el moodleCourseId y marca sincronizado = true
+   * @param id - ID del grupo
+   * @param moodleCourseId - ID del curso en Moodle
+   * @throws NotFoundException si no se encuentra el grupo
+   */
+  async confirmMoodleSync(
+    id: string,
+    moodleCourseId: number,
+  ): Promise<GrupoResponseDto> {
+    const grupo = await this.grupoRepository.findById(id);
+    if (!grupo) {
+      throw new NotFoundException(`Grupo con ID ${id} no encontrado`);
+    }
+
+    // Actualizar los campos de sincronización
+    grupo.moodleCourseId = moodleCourseId;
+    grupo.sincronizado = true;
+
+    await this.grupoRepository.update(grupo);
+
+    // Recargar con relaciones
+    const updatedGrupo = await this.grupoRepository.findById(id);
+    return this.toResponseDto(updatedGrupo!);
+  }
+
+  /**
+   * Obtiene grupos pendientes de sincronización
+   * Retorna grupos con sincronizado = false y deletedAt = null
+   * @returns Lista de grupos pendientes
+   */
+  async findPendingSync(): Promise<GrupoResponseDto[]> {
+    const grupos = await this.grupoRepository.findUnsynchronized();
+    return grupos.map((g) => this.toResponseDto(g));
+  }
+
+  /**
+   * Obtiene grupos eliminados pendientes de sincronización
+   * Retorna grupos con sincronizado = false y deletedAt != null
+   * @returns Lista de grupos eliminados pendientes
+   */
+  async findDeletedPendingSync(): Promise<GrupoResponseDto[]> {
+    const grupos = await this.grupoRepository.findDeletedUnsynchronized();
+    return grupos.map((g) => this.toResponseDto(g));
+  }
 }

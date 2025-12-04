@@ -202,4 +202,38 @@ export class DocenteService {
       }
     }
   }
+
+  /**
+   * Confirma la sincronización exitosa con Moodle
+   * Actualiza el moodleUserId y marca sincronizado = true
+   * @param id - ID del docente
+   * @param moodleUserId - ID del usuario en Moodle
+   * @throws NotFoundException si no se encuentra el docente
+   */
+  async confirmMoodleSync(id: string, moodleUserId: number): Promise<Docente> {
+    await this.findOne(id); // Verifica que existe
+
+    return await this.docenteRepository.update(id, {
+      moodleUserId,
+      sincronizado: true,
+    } as Partial<Docente>);
+  }
+
+  /**
+   * Obtiene docentes pendientes de sincronización
+   * Retorna docentes con sincronizado = false y deletedAt = null
+   * @returns Lista de docentes pendientes
+   */
+  async findPendingSync(): Promise<Docente[]> {
+    return await this.docenteRepository.findUnsynchronized();
+  }
+
+  /**
+   * Obtiene docentes eliminados pendientes de sincronización
+   * Retorna docentes con sincronizado = false y deletedAt != null
+   * @returns Lista de docentes eliminados pendientes
+   */
+  async findDeletedPendingSync(): Promise<Docente[]> {
+    return await this.docenteRepository.findDeletedUnsynchronized();
+  }
 }

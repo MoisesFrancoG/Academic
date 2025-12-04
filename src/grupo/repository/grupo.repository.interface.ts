@@ -96,4 +96,16 @@ export interface IGrupoRepository {
    * @returns Número de alumnos inscritos
    */
   countAlumnos(grupoId: string): Promise<number>;
+
+  /**
+   * Obtiene grupos no sincronizados (para Orquestador)
+   * sincronizado = false AND deletedAt IS NULL
+   */
+  findUnsynchronized(): Promise<Grupo[]>;
+
+  /**
+   * Obtiene grupos eliminados no sincronizados (para Orquestador)
+   * sincronizado = false AND deletedAt IS NOT NULL
+   */
+  findDeletedUnsynchronized(): Promise<Grupo[]>;
 }

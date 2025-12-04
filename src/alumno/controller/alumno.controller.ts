@@ -265,4 +265,102 @@ export class AlumnoController {
   async remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     await this.alumnoService.remove(id);
   }
+
+  /**
+   * Confirma la sincronización exitosa con Moodle
+   */
+  @Post(':id/sync')
+  @ApiOperation({
+    summary: 'Confirmar sincronización con Moodle',
+    description:
+      'Endpoint llamado por el Orquestador para confirmar que el alumno fue sincronizado exitosamente en Moodle. Actualiza el moodleUserId y marca sincronizado = true.',
+  })
+  @ApiParam({
+    name: 'id',
+    type: 'string',
+    description: 'UUID del alumno',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        moodleUserId: {
+          type: 'number',
+          description: 'ID del usuario en Moodle',
+          example: 45,
+        },
+      },
+      required: ['moodleUserId'],
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Sincronización confirmada exitosamente',
+    type: AlumnoResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Alumno no encontrado',
+  })
+  async confirmSync(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body('moodleUserId', ParseIntPipe) moodleUserId: number,
+  ): Promise<Alumno> {
+    return await this.alumnoService.confirmMoodleSync(id, moodleUserId);
+  }
+
+  /**
+   * Obtiene alumnos pendientes de sincronización
+   */
+  @Get('sync/pending')
+  @ApiOperation({
+    summary: 'Obtener alumnos pendientes de sincronización',
+    description:
+      'Retorna alumnos que han sido creados o modificados y aún no han sido sincronizados con Moodle (sincronizado = false y deletedAt = null).',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Lista de alumnos pendientes',
+    type: [AlumnoResponseDto],
+  })
+  async findPendingSync(
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<Alumno[] | void> {
+    const alumnos = await this.alumnoService.findPendingSync();
+
+    if (alumnos.length === 0) {
+      res.status(HttpStatus.NO_CONTENT);
+      return;
+    }
+
+    return alumnos;
+  }
+
+  /**
+   * Obtiene alumnos eliminados pendientes de sincronización
+   */
+  @Get('sync/deleted')
+  @ApiOperation({
+    summary: 'Obtener alumnos eliminados pendientes de sincronización',
+    description:
+      'Retorna alumnos que han sido eliminados lógicamente y aún no han sido eliminados en Moodle (sincronizado = false y deletedAt != null).',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Lista de alumnos eliminados pendientes',
+    type: [AlumnoResponseDto],
+  })
+  async findDeletedPendingSync(
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<Alumno[] | void> {
+    const alumnos = await this.alumnoService.findDeletedPendingSync();
+
+    if (alumnos.length === 0) {
+      res.status(HttpStatus.NO_CONTENT);
+      return;
+    }
+
+    return alumnos;
+  }
 }

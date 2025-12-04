@@ -64,4 +64,16 @@ export interface IAlumnoRepository {
     matricula: string,
     excludeId: string,
   ): Promise<boolean>;
+
+  /**
+   * Obtiene alumnos no sincronizados (para Orquestador)
+   * sincronizado = false AND deletedAt IS NULL
+   */
+  findUnsynchronized(): Promise<Alumno[]>;
+
+  /**
+   * Obtiene alumnos eliminados no sincronizados (para Orquestador)
+   * sincronizado = false AND deletedAt IS NOT NULL
+   */
+  findDeletedUnsynchronized(): Promise<Alumno[]>;
 }

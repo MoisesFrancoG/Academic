@@ -390,4 +390,71 @@ export class GrupoController {
     const count = await this.grupoService.countAlumnos(id);
     return { count };
   }
+
+  /**
+   * Confirma la sincronización exitosa con Moodle
+   */
+  @Post(':id/sync')
+  @ApiOperation({
+    summary: 'Confirmar sincronización con Moodle',
+    description:
+      'Endpoint llamado por el Orquestador para confirmar que el grupo fue sincronizado exitosamente en Moodle. Actualiza el moodleCourseId y marca sincronizado = true.',
+  })
+  @ApiParam({
+    name: 'id',
+    type: 'string',
+    description: 'UUID del grupo',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Sincronización confirmada exitosamente',
+    type: GrupoResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Grupo no encontrado',
+  })
+  async confirmSync(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body('moodleCourseId') moodleCourseId: number,
+  ): Promise<GrupoResponseDto> {
+    return await this.grupoService.confirmMoodleSync(id, moodleCourseId);
+  }
+
+  /**
+   * Obtiene grupos pendientes de sincronización
+   */
+  @Get('sync/pending')
+  @ApiOperation({
+    summary: 'Obtener grupos pendientes de sincronización',
+    description:
+      'Retorna grupos que han sido creados o modificados y aún no han sido sincronizados con Moodle (sincronizado = false y deletedAt = null).',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de grupos pendientes',
+    type: [GrupoResponseDto],
+  })
+  async findPendingSync(): Promise<GrupoResponseDto[]> {
+    return await this.grupoService.findPendingSync();
+  }
+
+  /**
+   * Obtiene grupos eliminados pendientes de sincronización
+   */
+  @Get('sync/deleted')
+  @ApiOperation({
+    summary: 'Obtener grupos eliminados pendientes de sincronización',
+    description:
+      'Retorna grupos que han sido eliminados lógicamente y aún no han sido eliminados en Moodle (sincronizado = false y deletedAt != null).',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de grupos eliminados pendientes',
+    type: [GrupoResponseDto],
+  })
+  async findDeletedPendingSync(): Promise<GrupoResponseDto[]> {
+    return await this.grupoService.findDeletedPendingSync();
+  }
 }

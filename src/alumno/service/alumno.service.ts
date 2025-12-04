@@ -155,4 +155,38 @@ export class AlumnoService {
   async count(): Promise<number> {
     return await this.alumnoRepository.count();
   }
+
+  /**
+   * Confirma la sincronización exitosa con Moodle
+   * Actualiza el moodleUserId y marca sincronizado = true
+   * @param id - ID del alumno
+   * @param moodleUserId - ID del usuario en Moodle
+   * @throws NotFoundException si no se encuentra el alumno
+   */
+  async confirmMoodleSync(id: string, moodleUserId: number): Promise<Alumno> {
+    await this.findOne(id); // Verifica que existe
+
+    return await this.alumnoRepository.update(id, {
+      moodleUserId,
+      sincronizado: true,
+    } as Partial<Alumno>);
+  }
+
+  /**
+   * Obtiene alumnos pendientes de sincronización
+   * Retorna alumnos con sincronizado = false y deletedAt = null
+   * @returns Lista de alumnos pendientes
+   */
+  async findPendingSync(): Promise<Alumno[]> {
+    return await this.alumnoRepository.findUnsynchronized();
+  }
+
+  /**
+   * Obtiene alumnos eliminados pendientes de sincronización
+   * Retorna alumnos con sincronizado = false y deletedAt != null
+   * @returns Lista de alumnos eliminados pendientes
+   */
+  async findDeletedPendingSync(): Promise<Alumno[]> {
+    return await this.alumnoRepository.findDeletedUnsynchronized();
+  }
 }

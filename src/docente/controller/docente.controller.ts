@@ -363,4 +363,102 @@ export class DocenteController {
     await this.docenteService.updateCompetencias(id, asignaturaIds);
     return { message: 'Competencias actualizadas exitosamente' };
   }
+
+  /**
+   * Confirma la sincronización exitosa con Moodle
+   */
+  @Post(':id/sync')
+  @ApiOperation({
+    summary: 'Confirmar sincronización con Moodle',
+    description:
+      'Endpoint llamado por el Orquestador para confirmar que el docente fue sincronizado exitosamente en Moodle. Actualiza el moodleUserId y marca sincronizado = true.',
+  })
+  @ApiParam({
+    name: 'id',
+    type: 'string',
+    description: 'UUID del docente',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        moodleUserId: {
+          type: 'number',
+          description: 'ID del usuario en Moodle',
+          example: 45,
+        },
+      },
+      required: ['moodleUserId'],
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Sincronización confirmada exitosamente',
+    type: DocenteResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Docente no encontrado',
+  })
+  async confirmSync(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body('moodleUserId') moodleUserId: number,
+  ): Promise<Docente> {
+    return await this.docenteService.confirmMoodleSync(id, moodleUserId);
+  }
+
+  /**
+   * Obtiene docentes pendientes de sincronización
+   */
+  @Get('sync/pending')
+  @ApiOperation({
+    summary: 'Obtener docentes pendientes de sincronización',
+    description:
+      'Retorna docentes que han sido creados o modificados y aún no han sido sincronizados con Moodle (sincronizado = false y deletedAt = null).',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Lista de docentes pendientes',
+    type: [DocenteResponseDto],
+  })
+  async findPendingSync(
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<Docente[] | void> {
+    const docentes = await this.docenteService.findPendingSync();
+
+    if (docentes.length === 0) {
+      res.status(HttpStatus.NO_CONTENT);
+      return;
+    }
+
+    return docentes;
+  }
+
+  /**
+   * Obtiene docentes eliminados pendientes de sincronización
+   */
+  @Get('sync/deleted')
+  @ApiOperation({
+    summary: 'Obtener docentes eliminados pendientes de sincronización',
+    description:
+      'Retorna docentes que han sido eliminados lógicamente y aún no han sido eliminados en Moodle (sincronizado = false y deletedAt != null).',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Lista de docentes eliminados pendientes',
+    type: [DocenteResponseDto],
+  })
+  async findDeletedPendingSync(
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<Docente[] | void> {
+    const docentes = await this.docenteService.findDeletedPendingSync();
+
+    if (docentes.length === 0) {
+      res.status(HttpStatus.NO_CONTENT);
+      return;
+    }
+
+    return docentes;
+  }
 }

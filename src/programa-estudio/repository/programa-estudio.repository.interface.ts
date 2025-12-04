@@ -56,4 +56,16 @@ export interface IProgramaEstudioRepository {
    * Busca programas por cantidad de cuatrimestres
    */
   findByCantidadCuatrimestres(cantidad: number): Promise<ProgramaEstudio[]>;
+
+  /**
+   * Obtiene programas no sincronizados (para Orquestador)
+   * sincronizado = false AND deletedAt IS NULL
+   */
+  findUnsynchronized(): Promise<ProgramaEstudio[]>;
+
+  /**
+   * Obtiene programas eliminados no sincronizados (para Orquestador)
+   * sincronizado = false AND deletedAt IS NOT NULL
+   */
+  findDeletedUnsynchronized(): Promise<ProgramaEstudio[]>;
 }

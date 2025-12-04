@@ -143,4 +143,41 @@ export class ProgramaEstudioService {
       cantidad,
     );
   }
+
+  /**
+   * Confirma la sincronización exitosa con Moodle
+   * Actualiza el moodleCategoryId y marca sincronizado = true
+   * @param id - ID del programa de estudio
+   * @param moodleCategoryId - ID de la categoría en Moodle
+   * @throws NotFoundException si no se encuentra el programa
+   */
+  async confirmMoodleSync(
+    id: string,
+    moodleCategoryId: number,
+  ): Promise<ProgramaEstudio> {
+    await this.findOne(id); // Verifica que existe
+
+    return await this.programaEstudioRepository.update(id, {
+      moodleCategoryId,
+      sincronizado: true,
+    } as Partial<ProgramaEstudio>);
+  }
+
+  /**
+   * Obtiene programas pendientes de sincronización
+   * Retorna programas con sincronizado = false y deletedAt = null
+   * @returns Lista de programas pendientes
+   */
+  async findPendingSync(): Promise<ProgramaEstudio[]> {
+    return await this.programaEstudioRepository.findUnsynchronized();
+  }
+
+  /**
+   * Obtiene programas eliminados pendientes de sincronización
+   * Retorna programas con sincronizado = false y deletedAt != null
+   * @returns Lista de programas eliminados pendientes
+   */
+  async findDeletedPendingSync(): Promise<ProgramaEstudio[]> {
+    return await this.programaEstudioRepository.findDeletedUnsynchronized();
+  }
 }

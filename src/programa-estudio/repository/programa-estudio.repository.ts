@@ -93,4 +93,26 @@ export class ProgramaEstudioRepository implements IProgramaEstudioRepository {
       order: { nombre: 'ASC' },
     });
   }
+
+  async findUnsynchronized(): Promise<ProgramaEstudio[]> {
+    return await this.repository.find({
+      where: {
+        sincronizado: false,
+        deletedAt: null as any,
+      },
+      order: { createdAt: 'ASC' },
+    });
+  }
+
+  async findDeletedUnsynchronized(): Promise<ProgramaEstudio[]> {
+    return await this.repository
+      .find({
+        where: {
+          sincronizado: false,
+        },
+        withDeleted: true,
+        order: { deletedAt: 'ASC' },
+      })
+      .then((all) => all.filter((p) => p.deletedAt !== null));
+  }
 }

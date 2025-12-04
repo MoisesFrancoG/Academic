@@ -215,4 +215,106 @@ export class ProgramaEstudioController {
   async remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     await this.programaEstudioService.remove(id);
   }
+
+  /**
+   * Confirma la sincronización exitosa con Moodle
+   */
+  @Post(':id/sync')
+  @ApiOperation({
+    summary: 'Confirmar sincronización con Moodle',
+    description:
+      'Endpoint llamado por el Orquestador para confirmar que el programa de estudio fue sincronizado exitosamente en Moodle. Actualiza el moodleCategoryId y marca sincronizado = true.',
+  })
+  @ApiParam({
+    name: 'id',
+    type: 'string',
+    description: 'UUID del programa de estudio',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        moodleCategoryId: {
+          type: 'number',
+          description: 'ID de la categoría en Moodle',
+          example: 12,
+        },
+      },
+      required: ['moodleCategoryId'],
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Sincronización confirmada exitosamente',
+    type: ProgramaEstudioResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Programa de estudio no encontrado',
+  })
+  async confirmSync(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body('moodleCategoryId') moodleCategoryId: number,
+  ): Promise<ProgramaEstudio> {
+    return await this.programaEstudioService.confirmMoodleSync(
+      id,
+      moodleCategoryId,
+    );
+  }
+
+  /**
+   * Obtiene programas pendientes de sincronización
+   */
+  @Get('sync/pending')
+  @ApiOperation({
+    summary: 'Obtener programas pendientes de sincronización',
+    description:
+      'Retorna programas que han sido creados o modificados y aún no han sido sincronizados con Moodle (sincronizado = false y deletedAt = null).',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Lista de programas pendientes',
+    type: [ProgramaEstudioResponseDto],
+  })
+  async findPendingSync(
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<ProgramaEstudio[] | void> {
+    const programas = await this.programaEstudioService.findPendingSync();
+
+    if (programas.length === 0) {
+      res.status(HttpStatus.NO_CONTENT);
+      return;
+    }
+
+    return programas;
+  }
+
+  /**
+   * Obtiene programas eliminados pendientes de sincronización
+   */
+  @Get('sync/deleted')
+  @ApiOperation({
+    summary: 'Obtener programas eliminados pendientes de sincronización',
+    description:
+      'Retorna programas que han sido eliminados lógicamente y aún no han sido eliminados en Moodle (sincronizado = false y deletedAt != null).',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Lista de programas eliminados pendientes',
+    type: [ProgramaEstudioResponseDto],
+  })
+  async findDeletedPendingSync(
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<ProgramaEstudio[] | void> {
+    const programas =
+      await this.programaEstudioService.findDeletedPendingSync();
+
+    if (programas.length === 0) {
+      res.status(HttpStatus.NO_CONTENT);
+      return;
+    }
+
+    return programas;
+  }
 }

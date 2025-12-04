@@ -66,4 +66,16 @@ export interface IDocenteRepository {
    * Actualiza las competencias de un docente (reemplaza todas)
    */
   updateCompetencias(docenteId: string, asignaturaIds: string[]): Promise<void>;
+
+  /**
+   * Obtiene docentes no sincronizados (para Orquestador)
+   * sincronizado = false AND deletedAt IS NULL
+   */
+  findUnsynchronized(): Promise<Docente[]>;
+
+  /**
+   * Obtiene docentes eliminados no sincronizados (para Orquestador)
+   * sincronizado = false AND deletedAt IS NOT NULL
+   */
+  findDeletedUnsynchronized(): Promise<Docente[]>;
 }

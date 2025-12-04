@@ -184,4 +184,40 @@ export class GrupoRepository implements IGrupoRepository {
       where: { grupoId },
     });
   }
+
+  async findUnsynchronized(): Promise<Grupo[]> {
+    return await this.grupoRepository.find({
+      where: {
+        sincronizado: false,
+        deletedAt: null as any,
+      },
+      relations: [
+        'asignatura',
+        'asignatura.programaEstudio',
+        'docente',
+        'inscripciones',
+        'inscripciones.alumno',
+      ],
+      order: { createdAt: 'ASC' },
+    });
+  }
+
+  async findDeletedUnsynchronized(): Promise<Grupo[]> {
+    return await this.grupoRepository
+      .find({
+        where: {
+          sincronizado: false,
+        },
+        relations: [
+          'asignatura',
+          'asignatura.programaEstudio',
+          'docente',
+          'inscripciones',
+          'inscripciones.alumno',
+        ],
+        withDeleted: true,
+        order: { deletedAt: 'ASC' },
+      })
+      .then((all) => all.filter((g) => g.deletedAt !== null));
+  }
 }

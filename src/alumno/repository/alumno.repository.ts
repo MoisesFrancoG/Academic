@@ -101,4 +101,26 @@ export class AlumnoRepository implements IAlumnoRepository {
     });
     return count > 0;
   }
+
+  async findUnsynchronized(): Promise<Alumno[]> {
+    return await this.repository.find({
+      where: {
+        sincronizado: false,
+        deletedAt: null as any,
+      },
+      order: { createdAt: 'ASC' },
+    });
+  }
+
+  async findDeletedUnsynchronized(): Promise<Alumno[]> {
+    return await this.repository
+      .find({
+        where: {
+          sincronizado: false,
+        },
+        withDeleted: true,
+        order: { deletedAt: 'ASC' },
+      })
+      .then((all) => all.filter((a) => a.deletedAt !== null));
+  }
 }
