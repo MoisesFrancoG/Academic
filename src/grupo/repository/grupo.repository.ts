@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { Repository, In } from 'typeorm';
+import { Repository, In, Not, IsNull } from 'typeorm';
 import type { IGrupoRepository } from './grupo.repository.interface';
 import { Grupo } from '../entities/grupo.entity';
 import { InscripcionGrupo } from '../../inscripciones-grupo/entities/inscripcion-grupo.entity';
@@ -203,21 +203,20 @@ export class GrupoRepository implements IGrupoRepository {
   }
 
   async findDeletedUnsynchronized(): Promise<Grupo[]> {
-    return await this.grupoRepository
-      .find({
-        where: {
-          sincronizado: false,
-        },
-        relations: [
-          'asignatura',
-          'asignatura.programaEstudio',
-          'docente',
-          'inscripciones',
-          'inscripciones.alumno',
-        ],
-        withDeleted: true,
-        order: { deletedAt: 'ASC' },
-      })
-      .then((all) => all.filter((g) => g.deletedAt !== null));
+    return await this.grupoRepository.find({
+      where: {
+        sincronizado: false,
+        deletedAt: Not(IsNull()), // CRÍTICO: Filtrar solo eliminados, evita falso positivo
+      },
+      relations: [
+        'asignatura',
+        'asignatura.programaEstudio',
+        'docente',
+        'inscripciones',
+        'inscripciones.alumno',
+      ],
+      withDeleted: true,
+      order: { deletedAt: 'ASC' },
+    });
   }
 }

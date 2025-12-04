@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { Repository, In } from 'typeorm';
+import { Repository, In, Not, IsNull } from 'typeorm';
 import { Docente } from '../entities/docente.entity';
 import { Asignatura } from '../../asignatura/entities/asignatura.entity';
 import { IDocenteRepository } from './docente.repository.interface';
@@ -209,15 +209,14 @@ export class DocenteRepository implements IDocenteRepository {
   }
 
   async findDeletedUnsynchronized(): Promise<Docente[]> {
-    return await this.repository
-      .find({
-        where: {
-          sincronizado: false,
-        },
-        relations: ['asignaturasCompetencia'],
-        withDeleted: true,
-        order: { deletedAt: 'ASC' },
-      })
-      .then((all) => all.filter((d) => d.deletedAt !== null));
+    return await this.repository.find({
+      where: {
+        sincronizado: false,
+        deletedAt: Not(IsNull()), // CRÍTICO: Filtrar solo eliminados, evita falso positivo
+      },
+      relations: ['asignaturasCompetencia'],
+      withDeleted: true,
+      order: { deletedAt: 'ASC' },
+    });
   }
 }

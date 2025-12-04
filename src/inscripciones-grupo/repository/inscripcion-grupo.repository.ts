@@ -123,7 +123,7 @@ export class InscripcionGrupoRepository implements IInscripcionGrupoRepository {
     if (!inscripcion) {
       throw new Error(`Inscripción con ID ${id} no encontrada`);
     }
-    
+
     inscripcion.sincronizado = true;
     await this.repository.save(inscripcion);
   }

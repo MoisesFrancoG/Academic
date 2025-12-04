@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { Repository, Not, IsNull } from 'typeorm';
 import { ProgramaEstudio } from '../entities/programa-estudio.entity';
 import { IProgramaEstudioRepository } from './programa-estudio.repository.interface';
 import { CreateProgramaEstudioDto } from '../DTOs/create-programa-estudio.dto';
@@ -105,14 +105,13 @@ export class ProgramaEstudioRepository implements IProgramaEstudioRepository {
   }
 
   async findDeletedUnsynchronized(): Promise<ProgramaEstudio[]> {
-    return await this.repository
-      .find({
-        where: {
-          sincronizado: false,
-        },
-        withDeleted: true,
-        order: { deletedAt: 'ASC' },
-      })
-      .then((all) => all.filter((p) => p.deletedAt !== null));
+    return await this.repository.find({
+      where: {
+        sincronizado: false,
+        deletedAt: Not(IsNull()), // CRÍTICO: Filtrar solo eliminados, evita falso positivo
+      },
+      withDeleted: true,
+      order: { deletedAt: 'ASC' },
+    });
   }
 }

@@ -158,13 +158,17 @@ export class ProgramaEstudioService {
     moodleCategoryId: number,
   ): Promise<ProgramaEstudio> {
     // CRÍTICO: Agregar 'withDeleted: true' para poder actualizar registros borrados
-    const programa = await this.programaEstudioRepository['repository'].findOne({
-      where: { id },
-      withDeleted: true,
-    });
+    const programa = await this.programaEstudioRepository['repository'].findOne(
+      {
+        where: { id },
+        withDeleted: true,
+      },
+    );
 
     if (!programa) {
-      throw new NotFoundException(`Programa de Estudio con ID ${id} no encontrado`);
+      throw new NotFoundException(
+        `Programa de Estudio con ID ${id} no encontrado`,
+      );
     }
 
     // Actualizar campos manualmente y guardar directamente
@@ -173,7 +177,8 @@ export class ProgramaEstudioService {
     programa.sincronizado = true;
 
     // Save directo en el repositorio TypeORM (bypass del método update personalizado)
-    const updated = await this.programaEstudioRepository['repository'].save(programa);
+    const updated =
+      await this.programaEstudioRepository['repository'].save(programa);
     return updated;
   }
 
